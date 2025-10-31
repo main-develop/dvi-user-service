@@ -32,8 +32,30 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.SessionAuthentication"
     ],
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
+# drf-spectacular settings
+
+with open(
+    os.path.join(BASE_DIR.parent, "docs/api_description.md"), encoding="utf-8"
+) as file:
+    api_description = file.read()
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "DVI User API Specification",
+    "DESCRIPTION": api_description,
+    "VERSION": None,
+    "SERVE_INCLUDE_SCHEMA": False,
+    "SERVE_PERMISSIONS": ["rest_framework.permissions.IsAuthenticatedOrReadOnly"],
+    "AUTHENTICATION_WHITELIST": [],
+    "TAGS": [
+        {
+            "name": "Users",
+            "description": "Endpoints for managing and viewing user profiles and related data.",
+        }
+    ],
+}
 
 # Application definition
 
@@ -45,6 +67,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    "drf_spectacular",
     "users",
 ]
 
