@@ -67,6 +67,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    "djoser",
     "drf_spectacular",
     "users",
 ]
@@ -161,3 +162,5 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # The name of the format query parameter
 
 URL_FORMAT_OVERRIDE = None
+
+AUTH_USER_MODEL = "users.User"
