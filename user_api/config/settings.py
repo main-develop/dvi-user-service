@@ -51,8 +51,8 @@ SPECTACULAR_SETTINGS = {
     "AUTHENTICATION_WHITELIST": [],
     "TAGS": [
         {
-            "name": "Users",
-            "description": "Endpoints for managing and viewing user profiles and related data.",
+            "name": "Auth",
+            "description": "Authentication and authorization endpoints",
         }
     ],
 }
