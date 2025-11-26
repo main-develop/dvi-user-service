@@ -8,10 +8,17 @@ class CustomModelBackend(ModelBackend):
     """
     Authenticates against settings.AUTH_USER_MODEL.
     """
-    
+
     def authenticate(self, request, username=None, password=None, **kwargs):
+        """
+        Authenticates a user by username or email, overriding the base method.
+
+        If an email is provided in **kwargs, attempts to retrieve the user by email.
+        Otherwise, falls back to the username (or the model's USERNAME_FIELD).
+        """
+
         email = kwargs.get("email")
-        
+
         if email:
             try:
                 user = UserModel._default_manager.get(email=email)
@@ -30,8 +37,15 @@ class CustomModelBackend(ModelBackend):
 
         if user.check_password(password) and self.user_can_authenticate(user):
             return user
-    
+
     async def aauthenticate(self, request, username=None, password=None, **kwargs):
+        """
+        Authenticates a user by username or email, overriding the base method.
+        Asynchronous version.
+
+        If an email is provided in **kwargs, attempts to retrieve the user by email.
+        Otherwise, falls back to the username (or the model's USERNAME_FIELD).
+        """
         email = kwargs.get("email")
 
         if email:
@@ -49,6 +63,6 @@ class CustomModelBackend(ModelBackend):
                 # difference between an existing and a nonexistent user (#20760).
                 UserModel().set_password(password)
                 return None
-        
+
         if await user.acheck_password(password) and self.user_can_authenticate(user):
             return user

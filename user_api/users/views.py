@@ -38,6 +38,11 @@ class CustomUserViewSet(UserViewSet):
 
 
 class LoginView(generics.GenericAPIView):
+    """
+    Authenticates a user using either their username or email.
+    Upon successful authentication, the user is logged in and a session is created.
+    """
+
     serializer_class = LoginSerializer
     permission_classes = []
 
@@ -46,9 +51,9 @@ class LoginView(generics.GenericAPIView):
         """
         Log in using an existing user account.
 
-        User can control the duration of their session using the `remember_me` value:
-        - `True` will set the session cookie to expire in 2 weeks;
-        - `False` will set the expiration to 0 making it a session cookie that expires
+        User can control the duration of their session using the ``remember_me`` value:
+        - ``True`` will set the session cookie to expire in 2 weeks;
+        - ``False`` will set the expiration to 0 making it a session cookie that expires
         when the browser closes.
         """
 
@@ -72,13 +77,18 @@ class LoginView(generics.GenericAPIView):
         login(request=request, user=user)
 
         if not remember_me:
-            # Session cookie will expire at browser close, otherwise after 2 weeks
+            # Session expires when browser is closed
             request.session.set_expiry(0)
+        # else: Default Django session expiry (2 weeks)
 
         return Response(status=status.HTTP_200_OK)
 
 
 class LogoutView(generics.GenericAPIView):
+    """
+    Log out the currently authenticated user by terminating their session.
+    """
+
     serializer_class = EmptySerializer
     permission_classes = [permissions.IsAuthenticated]
 

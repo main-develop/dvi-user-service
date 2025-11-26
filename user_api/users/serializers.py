@@ -2,10 +2,26 @@ from rest_framework import serializers
 
 
 class EmptySerializer(serializers.Serializer):
-    pass
+    """
+    An empty serializer used as a workaround for the :class:`LogoutView` view.
+
+    This bypasses errors in drf-spectacular during OpenAPI schema generation,
+    where a serializer_class is required even for non-serializing actions.
+    See the issue for details: https://github.com/tfranzel/drf-spectacular/issues/1314
+    https://github.com/tfranzel/drf-spectacular/issues/1314.
+
+    Note: this is a temporary fix; the issue is still open and may be resolved in the future.
+    """
 
 
 class LoginSerializer(serializers.Serializer):
+    """
+    Serializer for handling user login credentials.
+
+    Validates input for user authentication, allowing login via either
+    username or email (but not both), along with a password check.
+    """
+
     username = serializers.CharField(required=False)
     email = serializers.EmailField(required=False)
     password = serializers.CharField(required=True)
