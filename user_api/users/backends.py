@@ -23,6 +23,9 @@ class CustomModelBackend(ModelBackend):
             try:
                 user = UserModel._default_manager.get(email=email)
             except UserModel.DoesNotExist:
+                # Run the default password hasher once to reduce the timing
+                # difference between an existing and a nonexistent user (#20760).
+                UserModel().set_password(password)
                 return None
         else:
             if username is None:
@@ -30,13 +33,13 @@ class CustomModelBackend(ModelBackend):
             try:
                 user = UserModel._default_manager.get_by_natural_key(username)
             except UserModel.DoesNotExist:
-                # Run the default password hasher once to reduce the timing
-                # difference between an existing and a nonexistent user (#20760).
                 UserModel().set_password(password)
                 return None
 
         if user.check_password(password) and self.user_can_authenticate(user):
             return user
+
+        return None
 
     async def aauthenticate(self, request, username=None, password=None, **kwargs):
         """
@@ -52,6 +55,9 @@ class CustomModelBackend(ModelBackend):
             try:
                 user = await UserModel._default_manager.aget(email=email)
             except UserModel.DoesNotExist:
+                # Run the default password hasher once to reduce the timing
+                # difference between an existing and a nonexistent user (#20760).
+                UserModel().set_password(password)
                 return None
         else:
             if username is None:
@@ -59,10 +65,10 @@ class CustomModelBackend(ModelBackend):
             try:
                 user = await UserModel._default_manager.aget_by_natural_key(username)
             except UserModel.DoesNotExist:
-                # Run the default password hasher once to reduce the timing
-                # difference between an existing and a nonexistent user (#20760).
                 UserModel().set_password(password)
                 return None
 
         if await user.acheck_password(password) and self.user_can_authenticate(user):
             return user
+
+        return None
