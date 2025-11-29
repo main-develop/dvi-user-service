@@ -53,7 +53,11 @@ SPECTACULAR_SETTINGS = {
         {
             "name": "Auth",
             "description": "Authentication and authorization endpoints",
-        }
+        },
+        {
+            "name": "Users",
+            "description": "Endpoints for managing and viewing user's profile"
+        },
     ],
 }
 
@@ -178,6 +182,10 @@ DJOSER = {
     "PASSWORD_RESET_CONFIRM_RETYPE": True,
     "PASSWORD_CHANGED_EMAIL_CONFIRMATION": True,
     "PASSWORD_RESET_CONFIRM_URL": "#/password-reset/{uid}/{token}",
+    "SERIALIZERS": {
+        "set_username": "users.serializers.CustomSetUsernameSerializer",
+        "user_delete": "users.serializers.CustomUserDeleteSerializer",
+    },
 }
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"

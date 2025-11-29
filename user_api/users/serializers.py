@@ -1,17 +1,60 @@
+from django.contrib.auth import get_user_model
+from djoser.serializers import (
+    CurrentPasswordSerializer,
+    UserDeleteSerializer,
+    UsernameSerializer,
+)
 from rest_framework import serializers
 
+User = get_user_model()
 
-class EmptySerializer(serializers.Serializer):
+
+class ChangeEmailSerializer(CurrentPasswordSerializer):
     """
-    An empty serializer used as a workaround for the :class:`LogoutView` view.
-
-    This bypasses errors in drf-spectacular during OpenAPI schema generation,
-    where a serializer_class is required even for non-serializing actions.
-    See the issue for details: https://github.com/tfranzel/drf-spectacular/issues/1314
-    https://github.com/tfranzel/drf-spectacular/issues/1314.
-
-    Note: this is a temporary fix; the issue is still open and may be resolved in the future.
+    Serializer for requesting email change. Requires current password confirmation
+    (twice) and ensures the new email differs from the current one.
     """
+
+    new_email = serializers.EmailField(required=True)
+    re_current_password = serializers.CharField(required=True)
+
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+        user = self.context["request"].user
+
+        if attrs["new_email"] == user.email:
+            raise serializers.ValidationError(
+                {
+                    "new_email": "The current email address cannot be used as the new one."
+                }
+            )
+        if attrs["current_password"] != attrs["re_current_password"]:
+            raise serializers.ValidationError(
+                {"current_password": "Passwords do not match."}
+            )
+
+        return attrs
+
+
+class CustomUserDeleteSerializer(UserDeleteSerializer, CurrentPasswordSerializer):
+    """
+    Serializer for permanent user account deletion.
+
+    Extends Djoser's default :class:`UserDeleteSerializer` by requiring the user to
+    confirm their current password twice as an extra security measure
+    before allowing account deletion.
+    """
+
+    re_current_password = serializers.CharField(required=True)
+
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+        if attrs["current_password"] != attrs["re_current_password"]:
+            raise serializers.ValidationError(
+                {"current_password": "Passwords do not match."}
+            )
+
+        return attrs
 
 
 class LoginSerializer(serializers.Serializer):
@@ -44,3 +87,26 @@ class LoginSerializer(serializers.Serializer):
             raise serializers.ValidationError("Invalid credentials.")
 
         return attrs
+
+
+class EmptySerializer(serializers.Serializer):
+    """
+    An empty serializer used as a workaround for the :class:`LogoutView` view.
+
+    This bypasses errors in drf-spectacular during OpenAPI schema generation,
+    where a serializer_class is required even for non-serializing actions.
+    See the issue for details: https://github.com/tfranzel/drf-spectacular/issues/1314
+    https://github.com/tfranzel/drf-spectacular/issues/1314.
+
+    Note: this is a temporary fix; the issue is still open and may be resolved in the future.
+    """
+
+
+class CustomSetUsernameSerializer(UsernameSerializer):
+    """
+    Serializer for changing a user's username without requiring the current password.
+
+    Djoser's default :class:`UsernameSerializer` requires the ``current_password``
+    field. This custom serializer removes that requirement, since the security policy of
+    this project allows username changes without password confirmation.
+    """
