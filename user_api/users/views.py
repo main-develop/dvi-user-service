@@ -1,5 +1,5 @@
 from django.contrib.auth import authenticate, login, logout
-from djoser.serializers import ActivationSerializer, UserDeleteSerializer
+from djoser.serializers import ActivationSerializer
 from djoser.views import UserViewSet
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import generics, permissions, status
@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from users.emails import ChangeEmailConfirmationEmail, EmailChangedEmail
 from users.serializers import (
     ChangeEmailSerializer,
+    CustomUserDeleteSerializer,
     EmptySerializer,
     LoginSerializer,
 )
@@ -140,7 +141,7 @@ class CustomUserViewSet(UserViewSet):
     @extend_schema(
         summary="Delete user's account",
         tags=["Users"],
-        request=UserDeleteSerializer,
+        request=CustomUserDeleteSerializer,
     )
     def destroy(self, request, *args, **kwargs):
         """
