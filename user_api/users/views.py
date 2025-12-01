@@ -5,7 +5,7 @@ from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import generics, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from users.emails import ChangeEmailConfirmationEmail, EmailChangedEmail
+from users.emails import AccountDeletionEmail, ChangeEmailConfirmationEmail, EmailChangedEmail
 from users.serializers import (
     ChangeEmailSerializer,
     CustomUserDeleteSerializer,
@@ -149,14 +149,13 @@ class CustomUserViewSet(UserViewSet):
         Returns ``200 OK`` on successful deletion instead of the default ``204 NO CONTENT``.
         """
 
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data)
+        user = request.user
+        serializer = self.get_serializer(user, data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        if instance == request.user:
-            logout(self.request)
-
-        self.perform_destroy(instance=instance)
+        context = {"user": user}
+        to = [user.email]
+        AccountDeletionEmail(request, context).send(to)
 
         return Response(status=status.HTTP_200_OK)
 
