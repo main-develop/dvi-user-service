@@ -40,9 +40,21 @@ class AccountDeletionEmail(BaseDjoserEmail):
         return context
 
 
+class ChangeEmailAlertEmail(BaseDjoserEmail):
+    """
+    Security alert sent to the current (old) email address when someone
+    requests to change the account's email.
+
+    This email notifies the legitimate account owner that an email change has been requested
+    and allows immediate action if this was an unauthorized attempt (account takeover).
+    """
+    
+    template_name = "emails/change_email_alert.html"
+
+
 class ChangeEmailConfirmationEmail(BaseDjoserEmail):
     """
-    Email sent when a user requests to change their account email address.
+    Email sent to the new address when a user requests to change their account email.
 
     This email contains a confirmation link with a UID and token that the user
     must click to activate the new email address.

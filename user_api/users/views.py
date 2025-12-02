@@ -5,7 +5,12 @@ from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import generics, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from users.emails import AccountDeletionEmail, ChangeEmailConfirmationEmail, EmailChangedEmail
+from users.emails import (
+    AccountDeletionEmail,
+    ChangeEmailAlertEmail,
+    ChangeEmailConfirmationEmail,
+    EmailChangedEmail,
+)
 from users.serializers import (
     ChangeEmailSerializer,
     CustomUserDeleteSerializer,
@@ -102,14 +107,12 @@ class CustomUserViewSet(UserViewSet):
         serializer.is_valid(raise_exception=True)
 
         user = request.user
-        new_email = serializer.validated_data["new_email"]
-
-        user.pending_email = new_email
+        user.pending_email = serializer.validated_data["new_email"]
         user.save()
 
         context = {"user": user}
-        to = [new_email]
-        ChangeEmailConfirmationEmail(request, context).send(to)
+        ChangeEmailAlertEmail(request, context).send([user.email])
+        ChangeEmailConfirmationEmail(request, context).send([user.pending_email])
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
