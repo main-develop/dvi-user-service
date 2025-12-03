@@ -7,15 +7,15 @@ from djoser.email import BaseDjoserEmail, ActivationEmail, ConfirmationEmail
 
 
 class CustomActivationEmail(ActivationEmail):
-    template_name = "emails/activation.html"
+    template_name = "emails/email_verification.html"
 
 
 class CustomConfirmationEmail(ConfirmationEmail):
-    template_name = "emails/confirmation.html"
+    template_name = "emails/email_verified.html"
 
 
-class AccountDeletionEmail(BaseDjoserEmail):
-    template_name = "emails/account_deletion.html"
+class AccountDeletionAlertEmail(BaseDjoserEmail):
+    template_name = "emails/account_deletion_alert.html"
 
     def get_context_data(self):
         context = super().get_context_data()
@@ -40,7 +40,7 @@ class AccountDeletionEmail(BaseDjoserEmail):
         return context
 
 
-class ChangeEmailAlertEmail(BaseDjoserEmail):
+class ChangeEmailNoticeEmail(BaseDjoserEmail):
     """
     Security alert sent to the current (old) email address when someone
     requests to change the account's email.
@@ -48,11 +48,11 @@ class ChangeEmailAlertEmail(BaseDjoserEmail):
     This email notifies the legitimate account owner that an email change has been requested
     and allows immediate action if this was an unauthorized attempt (account takeover).
     """
-    
-    template_name = "emails/change_email_alert.html"
+
+    template_name = "emails/change_email_notice.html"
 
 
-class ChangeEmailConfirmationEmail(BaseDjoserEmail):
+class ChangeEmailConfirmEmail(BaseDjoserEmail):
     """
     Email sent to the new address when a user requests to change their account email.
 
@@ -60,7 +60,7 @@ class ChangeEmailConfirmationEmail(BaseDjoserEmail):
     must click to activate the new email address.
     """
 
-    template_name = "emails/change_email_confirmation.html"
+    template_name = "emails/change_email_confirm.html"
 
     def get_context_data(self):
         context = super().get_context_data()
@@ -73,10 +73,10 @@ class ChangeEmailConfirmationEmail(BaseDjoserEmail):
         return context
 
 
-class EmailChangedEmail(BaseDjoserEmail):
+class ChangeEmailSuccessEmail(BaseDjoserEmail):
     """
     Notification email sent to the user's new email address after they have
     successfully changed their account email.
     """
 
-    template_name = "emails/email_changed.html"
+    template_name = "emails/change_email_success.html"

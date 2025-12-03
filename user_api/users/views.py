@@ -6,10 +6,10 @@ from rest_framework import generics, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from users.emails import (
-    AccountDeletionEmail,
-    ChangeEmailAlertEmail,
-    ChangeEmailConfirmationEmail,
-    EmailChangedEmail,
+    AccountDeletionAlertEmail,
+    ChangeEmailConfirmEmail,
+    ChangeEmailNoticeEmail,
+    ChangeEmailSuccessEmail,
 )
 from users.serializers import (
     ChangeEmailSerializer,
@@ -111,8 +111,8 @@ class CustomUserViewSet(UserViewSet):
         user.save()
 
         context = {"user": user}
-        ChangeEmailAlertEmail(request, context).send([user.email])
-        ChangeEmailConfirmationEmail(request, context).send([user.pending_email])
+        ChangeEmailNoticeEmail(request, context).send([user.email])
+        ChangeEmailConfirmEmail(request, context).send([user.pending_email])
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -137,7 +137,7 @@ class CustomUserViewSet(UserViewSet):
 
         context = {"user": user}
         to = [user.email]
-        EmailChangedEmail(request, context).send(to)
+        ChangeEmailSuccessEmail(request, context).send(to)
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -158,7 +158,7 @@ class CustomUserViewSet(UserViewSet):
 
         context = {"user": user}
         to = [user.email]
-        AccountDeletionEmail(request, context).send(to)
+        AccountDeletionAlertEmail(request, context).send(to)
 
         return Response(status=status.HTTP_200_OK)
 

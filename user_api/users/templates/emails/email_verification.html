@@ -1,22 +1,27 @@
 {% block subject %}
-Email Address Has Been Changed
+Verify Your Email Address for DVI
 {% endblock subject %}
 
 {% block text_body%}
-Email address changed successfully.
+Hi,
 
-At your request, your email address has been changed to {{ user.email }}.
+Thanks for signing up to DVI!
+
+Please verify your email address by clicking the link below:
+{{ protocol }}://{{ domain }}/{{ url|safe }}
+
+Didn't sign up? No problem, you can safely ignore this email.
 
 Sincerely, The DVI Team
 {% endblock text_body %}
 
 {% block html_body %}
 <html>
-  <header>
+  <head>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
-  </header>
+  </head>
   <body>
     <table width="100%" cellspacing="0" cellpadding="0">
       <tr>
@@ -32,6 +37,9 @@ Sincerely, The DVI Team
               border-radius: 8px;
               box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
               text-align: center;
+              font-family: 'Roboto', sans-serif;
+              font-weight: 500;
+              font-style: normal;
             "
           >
             <tr>
@@ -39,16 +47,37 @@ Sincerely, The DVI Team
                 <hr
                   style="border: 0; border-top: 1px solid #ddd; margin-top: 20px"
                 />
-                <h2 style="text-align: left; color: #333333">
-                  Email address changed successfully
+                <h2 style="display: inline-block; text-align: left; color: #333333">
+                  Email Address Verification
                 </h2>
-    
-                <p style="display: inline-block; text-align: left; color: #444444">
-                  At your request, your email address has been changed to
-                  <a href="" style="color: #007bff; text-decoration: underline">{{ user.email }}</a>.
+
+                <p style="margin-top: 35px; text-align: left; color: #444444">
+                  Hi,
                 </p>
-    
-                <p style="margin-top: 30px; text-align: left; color: #444444">
+
+                <p style="margin-top: 0; text-align: left; color: #444444">
+                  Thanks for signing up to <strong>DVI</strong>! Please verify your email address by clicking the button below:
+                </p>
+                <p style="margin: 35px 0 35px 0;">
+                  <a
+                    href="{{ protocol }}://{{ domain }}/{{ url|safe }}"
+                    style="
+                      background-color: #007bff;
+                      color: #ffffff;
+                      padding: 10px 24px;
+                      text-decoration: none;
+                      border-radius: 6px;
+                      font-weight: bold;
+                    "
+                    >Verify Email Address</a
+                  >
+                </p>
+
+                <p style="text-align: left; color: #444444">
+                  Didn't sign up? No problem, you can safely ignore this email.
+                </p>
+
+                <p style="margin-top: 35px; text-align: left; color: #444444">
                   Sincerely,<br />The DVI Team
                 </p>
                 <hr

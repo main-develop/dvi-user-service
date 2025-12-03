@@ -1,30 +1,27 @@
 {% block subject %}
-Action Required: Confirm Your New Email Address for DVI
+Email Address Changed for Your DVI Account
 {% endblock subject %}
 
 {% block text_body%}
-Hi,
+Dear user,
 
-We received a request to change the email address on your DVI account to {{ pending_email }}.
+The email address on your DVI account has been successfully changed to {{ user.email }}.
 
-To confirm this change, click on the link below:
-{{ protocol }}://{{ domain }}/{{ url|safe }}
-
-Didn't make this request? No problem, you can safely ignore this email.
+You're all set!
 
 Sincerely, The DVI Team
 {% endblock text_body %}
 
 {% block html_body %}
 <html>
-  <head>
+  <header>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap"
       rel="stylesheet"
     />
-  </head>
+  </header>
   <body>
     <table width="100%" cellspacing="0" cellpadding="0">
       <tr>
@@ -54,48 +51,31 @@ Sincerely, The DVI Team
                     margin-top: 20px;
                   "
                 />
-                <h2 style="display: inline-block; color: #333333">
-                  New Email Confirmation
-                </h2>
-
-                <p style="margin-top: 20px; text-align: left; color: #444444">
-                  Hi,
-                </p>
-
-                <p
+                <h2
                   style="
-                    margin-top: 0; 
                     display: inline-block;
                     text-align: left;
-                    color: #444444;
+                    color: #333333;
                   "
                 >
-                  We received a request to change the email address on your DVI account to <strong>{{ pending_email }}</strong>.
+                  Email Address Changed Successfully
+                </h2>
+
+                <p style="margin-top: 35px; text-align: left; color: #444444">
+                  Dear user,
                 </p>
 
-                <p style="text-align: left; color: #444444">
-                  To confirm this change, click on the button below:
-                </p>
-                <p style="margin: 35px 0 35px 0;">
-                  <a
-                    href="{{ protocol }}://{{ domain }}/{{ url|safe }}"
-                    style="
-                      background-color: #007bff;
-                      color: #ffffff;
-                      padding: 10px 24px;
-                      text-decoration: none;
-                      border-radius: 6px;
-                      font-weight: bold;
-                    "
-                    >Change Email Address</a
-                  >
+                <p style="margin-top: 0; text-align: left; color: #444444">
+                  The email address on your <strong>DVI</strong> account has
+                  been successfully changed to
+                  <strong>{{ user.email }}</strong>.
                 </p>
 
-                <p style="margin-top: 0; text-align: left; color: #444444;">
-                  Didn't make this request? No problem, you can safely ignore this email.
+                <p style="margin-top: 0; text-align: left; color: #444444">
+                  You're all set!
                 </p>
 
-                <p style="margin-top: 30px; text-align: left; color: #444444">
+                <p style="margin-top: 35px; text-align: left; color: #444444">
                   Sincerely,<br />The DVI Team
                 </p>
                 <hr
