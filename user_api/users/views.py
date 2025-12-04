@@ -7,6 +7,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from users.emails import (
     AccountDeletionAlertEmail,
+    ChangeEmailAlertEmail,
     ChangeEmailConfirmEmail,
     ChangeEmailNoticeEmail,
     ChangeEmailSuccessEmail,
@@ -131,13 +132,14 @@ class CustomUserViewSet(UserViewSet):
         serializer.is_valid(raise_exception=True)
 
         user = serializer.user
+        old_email = user.email
         user.email = user.pending_email
         user.pending_email = None
         user.save()
 
         context = {"user": user}
-        to = [user.email]
-        ChangeEmailSuccessEmail(request, context).send(to)
+        ChangeEmailAlertEmail(request, context).send([old_email])
+        ChangeEmailSuccessEmail(request, context).send([user.email])
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 

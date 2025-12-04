@@ -40,6 +40,18 @@ class AccountDeletionAlertEmail(BaseDjoserEmail):
         return context
 
 
+class ChangeEmailAlertEmail(BaseDjoserEmail):
+    """
+    Security alert sent to the old email address after the account's
+    email was changed.
+
+    This email gives the legitimate owner an immediate way to revoke sessions,
+    reset password, etc., to protect their account in case of a breach.
+    """
+    
+    template_name = "emails/change_email_alert.html"
+
+
 class ChangeEmailNoticeEmail(BaseDjoserEmail):
     """
     Security alert sent to the current (old) email address when someone
