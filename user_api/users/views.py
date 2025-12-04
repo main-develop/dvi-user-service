@@ -1,5 +1,5 @@
 from django.contrib.auth import authenticate, login, logout
-from djoser.serializers import ActivationSerializer
+from djoser.serializers import UidAndTokenSerializer
 from djoser.views import UserViewSet
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import generics, permissions, status
@@ -90,7 +90,7 @@ class CustomUserViewSet(UserViewSet):
         if self.action == "change_email":
             return ChangeEmailSerializer
         elif self.action == "change_email_confirm":
-            return ActivationSerializer
+            return UidAndTokenSerializer
         return super().get_serializer_class()
 
     @extend_schema(

@@ -54,7 +54,7 @@ class ChangeEmailAlertEmail(BaseDjoserEmail):
 
 class ChangeEmailNoticeEmail(BaseDjoserEmail):
     """
-    Security alert sent to the current (old) email address when someone
+    Security notice sent to the current email address when someone
     requests to change the account's email.
 
     This email notifies the legitimate account owner that an email change has been requested
