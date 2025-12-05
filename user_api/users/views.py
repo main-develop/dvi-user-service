@@ -11,6 +11,8 @@ from users.emails import (
     ChangeEmailConfirmEmail,
     ChangeEmailNoticeEmail,
     ChangeEmailSuccessEmail,
+    ResetPasswordConfirmEmail,
+    ResetPasswordSuccessEmail,
 )
 from users.serializers import (
     ChangeEmailSerializer,
@@ -43,23 +45,6 @@ from users.serializers import (
     set_password=extend_schema(
         summary="Change user's password",
         description="Change user's password to a new one.",
-        tags=["Users"],
-    ),
-    reset_password=extend_schema(
-        summary="Request password reset",
-        description=(
-            "Request a password reset to the specified email address. "
-            "The number of attempts is limited to 4 per hour."
-        ),
-        tags=["Users"],
-    ),
-    reset_password_confirm=extend_schema(
-        summary="Confirm password reset",
-        description=(
-            "Confirm password reset and set a new one. "
-            "The `uid` and `token` values must be extracted from the link sent to the "
-            "user's email address."
-        ),
         tags=["Users"],
     ),
     activation=extend_schema(
@@ -140,6 +125,50 @@ class CustomUserViewSet(UserViewSet):
         context = {"user": user}
         ChangeEmailAlertEmail(request, context).send([old_email])
         ChangeEmailSuccessEmail(request, context).send([user.email])
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    
+    @extend_schema(
+        summary="Request password reset",
+        tags=["Users"],
+    )
+    @action(["post"], detail=False)
+    def reset_password(self, request, *args, **kwargs):
+        """
+        Request a password reset to the specified email address.
+        The number of attempts is limited to 4 per hour.
+        """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user = serializer.get_user()
+        if user:
+            print(user.email)
+            context = {"user": user}
+            ResetPasswordConfirmEmail(request, context).send([user.email])
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    
+    @extend_schema(
+        summary="Confirm password reset",
+        tags=["Users"],
+    )
+    @action(["post"], detail=False)
+    def reset_password_confirm(self, request, *args, **kwargs):
+        """
+        Confirm password reset and set a new one. The `uid` and `token` values
+        must be extracted from the link sent to the user's email address.
+        """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        serializer.user.set_password(serializer.data["new_password"])
+        # if hasattr(serializer.user, "last_login"):
+        #     serializer.user.last_login = now()
+        serializer.user.save()
+
+        context = {"user": serializer.user}
+        ResetPasswordSuccessEmail(request, context).send([serializer.user.email])
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 

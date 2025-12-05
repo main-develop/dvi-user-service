@@ -3,7 +3,13 @@ from django.utils import timezone
 from django.utils.formats import date_format
 from django.contrib.auth.tokens import default_token_generator
 from djoser import utils
-from djoser.email import BaseDjoserEmail, ActivationEmail, ConfirmationEmail
+from djoser.email import (
+    BaseDjoserEmail,
+    ActivationEmail,
+    ConfirmationEmail,
+    PasswordResetEmail,
+    PasswordChangedConfirmationEmail,
+)
 
 
 class CustomActivationEmail(ActivationEmail):
@@ -92,3 +98,11 @@ class ChangeEmailSuccessEmail(BaseDjoserEmail):
     """
 
     template_name = "emails/change_email_success.html"
+
+
+class ResetPasswordConfirmEmail(PasswordResetEmail):
+    template_name = "emails/reset_password_confirm.html"
+
+
+class ResetPasswordSuccessEmail(PasswordChangedConfirmationEmail):
+    template_name = "emails/reset_password_success.html"
