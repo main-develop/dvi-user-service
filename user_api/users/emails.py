@@ -106,3 +106,12 @@ class ResetPasswordConfirmEmail(PasswordResetEmail):
 
 class ResetPasswordSuccessEmail(PasswordChangedConfirmationEmail):
     template_name = "emails/reset_password_success.html"
+
+
+class AccountLockdownNoticeEmail(BaseDjoserEmail):
+    """
+    Notification email sent to the user after their account has been locked down.
+    
+    This email contains a password reset link if user haven't reset their password yet.
+    """
+    template_name = "emails/account_security_lockdown_notice.html"

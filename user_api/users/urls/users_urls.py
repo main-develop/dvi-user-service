@@ -37,4 +37,9 @@ urlpatterns = [
         CustomUserViewSet.as_view({"post": "reset_password_confirm"}),
         name="users_password_reset_confirm",
     ),
+    path(
+        "account-security/lockdown/",
+        CustomUserViewSet.as_view({"post": "lockdown_account"}),
+        name="users_account_security_lockdown",
+    ),
 ]

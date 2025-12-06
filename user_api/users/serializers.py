@@ -3,7 +3,9 @@ from djoser.serializers import (
     CurrentPasswordSerializer,
     UserDeleteSerializer,
     UsernameSerializer,
+    SendEmailResetSerializer,
 )
+from djoser.compat import settings
 from rest_framework import serializers
 
 User = get_user_model()
@@ -55,6 +57,33 @@ class CustomUserDeleteSerializer(UserDeleteSerializer, CurrentPasswordSerializer
             )
 
         return attrs
+
+
+class CustomSendEmailResetSerializer(SendEmailResetSerializer):
+    """
+    Serializer for requesting password reset.
+
+    Modifies Djoser's default :class:`SendEmailResetSerializer` by removing
+    ``"if user.has_usable_password()"`` guard. This allows password reset to work
+    even after ``"user.set_unusable_password()"`` was deliberately called
+    during account security lockdown.
+    """
+
+    def get_user(self, is_active=True):
+        try:
+            user = User._default_manager.get(
+                is_active=is_active,
+                **{self.email_field: self.data.get(self.email_field, "")},
+            )
+            return user
+        except User.DoesNotExist:
+            pass
+
+        if (
+            settings.PASSWORD_RESET_SHOW_EMAIL_NOT_FOUND
+            or settings.USERNAME_RESET_SHOW_EMAIL_NOT_FOUND
+        ):
+            self.fail("email_not_found")
 
 
 class LoginSerializer(serializers.Serializer):

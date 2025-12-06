@@ -1,4 +1,7 @@
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.sessions.models import Session
+from django.db import transaction
+from django.utils import timezone
 from djoser.serializers import UidAndTokenSerializer
 from djoser.views import UserViewSet
 from drf_spectacular.utils import extend_schema, extend_schema_view
@@ -7,6 +10,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from users.emails import (
     AccountDeletionAlertEmail,
+    AccountLockdownNoticeEmail,
     ChangeEmailAlertEmail,
     ChangeEmailConfirmEmail,
     ChangeEmailNoticeEmail,
@@ -76,7 +80,16 @@ class CustomUserViewSet(UserViewSet):
             return ChangeEmailSerializer
         elif self.action == "change_email_confirm":
             return UidAndTokenSerializer
+        elif self.action == "lockdown_account":
+            return UidAndTokenSerializer
+        
         return super().get_serializer_class()
+    
+    def get_permissions(self):
+        if self.action == "lockdown_account":
+            self.permission_classes = [permissions.AllowAny]
+        
+        return super().get_permissions()
 
     @extend_schema(
         summary="Request email change",
@@ -143,7 +156,6 @@ class CustomUserViewSet(UserViewSet):
 
         user = serializer.get_user()
         if user:
-            print(user.email)
             context = {"user": user}
             ResetPasswordConfirmEmail(request, context).send([user.email])
 
@@ -171,6 +183,37 @@ class CustomUserViewSet(UserViewSet):
         ResetPasswordSuccessEmail(request, context).send([serializer.user.email])
 
         return Response(status=status.HTTP_204_NO_CONTENT)
+    
+    @extend_schema(
+        summary="Lockdown user's account",
+        tags=["Users"],
+    )
+    @action(["post"], detail=False)
+    def lockdown_account(self, request, *args, **kwargs):
+        """
+        Immediate account security lockdown at the user's request to protect against
+        potential unauthorized access (account takeover).
+
+        This action invalidates current password and revokes all user sessions.
+        """
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user = serializer.user
+        logout(request=request)
+
+        with transaction.atomic():
+            user.set_unusable_password()
+            user.save(update_fields=["password"])
+
+            for session in Session.objects.filter(expire_date__gte=timezone.now()):
+                if str(user.pk) == session.get_decoded().get("_auth_user_id"):
+                    session.delete()
+
+        AccountLockdownNoticeEmail(request=request, context={"user": user}).send([user.email])
+
+        return Response(status=status.HTTP_200_OK)
 
     @extend_schema(
         summary="Delete user's account",
