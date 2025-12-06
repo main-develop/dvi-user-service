@@ -203,6 +203,8 @@ class CustomUserViewSet(UserViewSet):
         user = serializer.user
         logout(request=request)
 
+        # add account deletion check
+
         with transaction.atomic():
             user.set_unusable_password()
             user.save(update_fields=["password"])

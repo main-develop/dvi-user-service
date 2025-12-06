@@ -30,6 +30,7 @@ class AccountDeletionAlertEmail(BaseDjoserEmail):
         context["uid"] = utils.encode_uid(user.pk)
         context["token"] = default_token_generator.make_token(user)
         context["cancel_deletion_url"] = "cancel-deletion/{uid}/{token}".format(**context)
+        context["account_security_lockdown_url"] = "account-security/lockdown/{uid}/{token}".format(**context)
 
         deletion_at = timezone.now() + timezone.timedelta(hours=24)
         utc = datetime.timezone.utc
@@ -57,6 +58,16 @@ class ChangeEmailAlertEmail(BaseDjoserEmail):
     
     template_name = "emails/change_email_alert.html"
 
+    def get_context_data(self):
+        context = super().get_context_data()
+        user = context.get("user")
+
+        context["uid"] = utils.encode_uid(user.pk)
+        context["token"] = default_token_generator.make_token(user)
+        context["account_security_lockdown_url"] = "account-security/lockdown/{uid}/{token}".format(**context)
+
+        return context
+
 
 class ChangeEmailNoticeEmail(BaseDjoserEmail):
     """
@@ -68,6 +79,16 @@ class ChangeEmailNoticeEmail(BaseDjoserEmail):
     """
 
     template_name = "emails/change_email_notice.html"
+
+    def get_context_data(self):
+        context = super().get_context_data()
+        user = context.get("user")
+
+        context["uid"] = utils.encode_uid(user.pk)
+        context["token"] = default_token_generator.make_token(user)
+        context["account_security_lockdown_url"] = "account-security/lockdown/{uid}/{token}".format(**context)
+
+        return context
 
 
 class ChangeEmailConfirmEmail(BaseDjoserEmail):
@@ -106,6 +127,16 @@ class ResetPasswordConfirmEmail(PasswordResetEmail):
 
 class ResetPasswordSuccessEmail(PasswordChangedConfirmationEmail):
     template_name = "emails/reset_password_success.html"
+
+    def get_context_data(self):
+        context = super().get_context_data()
+        user = context.get("user")
+
+        context["uid"] = utils.encode_uid(user.pk)
+        context["token"] = default_token_generator.make_token(user)
+        context["url"] = "#/{uid}/{token}".format(**context)
+
+        return context
 
 
 class AccountLockdownNoticeEmail(BaseDjoserEmail):
