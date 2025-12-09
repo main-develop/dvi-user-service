@@ -240,8 +240,9 @@ class CustomUserViewSet(UserViewSet):
             return Response({"detail": "No deletion scheduled."}, status=status.HTTP_200_OK)
         
         with transaction.atomic():
+            user.is_active = True
             user.deletion_scheduled_at = None
-            user.save(update_fields=["deletion_scheduled_at"])
+            user.save(update_fields=["is_active", "deletion_scheduled_at"])
         
         AccountDeletionCanceledEmail(request=None, context=None).send([user.email])
         
@@ -263,8 +264,12 @@ class CustomUserViewSet(UserViewSet):
         serializer = self.get_serializer(user, data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        user.deletion_scheduled_at = timezone.now() + timezone.timedelta(hours=24)
-        user.save(update_fields=["deletion_scheduled_at"])
+        with transaction.atomic():
+            user.is_active = False
+            user.deletion_scheduled_at = timezone.now() + timezone.timedelta(hours=24)
+            user.save(update_fields=["is_active", "deletion_scheduled_at"])
+        
+        # TODO: revoke all sessions
 
         AccountDeletionAlertEmail(request, {"user": user}).send([user.email])
 
