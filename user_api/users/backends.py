@@ -1,5 +1,5 @@
-from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth import get_user_model
+from django.contrib.auth.backends import ModelBackend
 
 UserModel = get_user_model()
 
@@ -49,6 +49,7 @@ class CustomModelBackend(ModelBackend):
         If an email is provided in **kwargs, attempts to retrieve the user by email.
         Otherwise, falls back to the username (or the model's USERNAME_FIELD).
         """
+        
         email = kwargs.get("email")
 
         if email:

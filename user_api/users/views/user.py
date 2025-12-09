@@ -1,31 +1,14 @@
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.sessions.models import Session
 from django.db import transaction
 from django.utils import timezone
 from djoser.serializers import UidAndTokenSerializer
 from djoser.views import UserViewSet
 from drf_spectacular.utils import extend_schema, extend_schema_view
-from rest_framework import generics, permissions, status
+from rest_framework import permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from users.emails import (
-    AccountDeletionAlertEmail,
-    AccountDeletionCanceledEmail,
-    AccountLockdownNoticeEmail,
-    ChangeEmailAlertEmail,
-    ChangeEmailConfirmEmail,
-    ChangeEmailNoticeEmail,
-    ChangeEmailSuccessEmail,
-    ResetPasswordConfirmEmail,
-    ResetPasswordSuccessEmail,
-)
-from users.serializers import (
-    ChangeEmailSerializer,
-    CustomUserDeleteSerializer,
-    EmptySerializer,
-    LoginSerializer,
-)
+from users import emails, serializers
 from users.models import User
+from users.utils import revoke_all_user_sessions
 
 
 @extend_schema_view(
@@ -79,46 +62,48 @@ class CustomUserViewSet(UserViewSet):
 
     def get_serializer_class(self):
         if self.action == "change_email":
-            return ChangeEmailSerializer
-        elif self.action in {"change_email_confirm", "lockdown_account", "cancel_deletion"}:
+            return serializers.ChangeEmailSerializer
+        if self.action in {
+            "change_email_confirm",
+            "lockdown_account",
+            "cancel_deletion",
+        }:
             return UidAndTokenSerializer
-        
+
         return super().get_serializer_class()
-    
+
     def get_permissions(self):
         if self.action == "lockdown_account":
             self.permission_classes = [permissions.AllowAny]
-        
+
         return super().get_permissions()
 
-    @extend_schema(
-        summary="Request email change",
-        tags=["Users"],
-    )
+    @extend_schema(summary="Request email change", tags=["Users"])
     @action(["post"], detail=False)
     def change_email(self, request, *args, **kwargs):
         """
         Allows an authenticated user to request a change of their email address.
-        A confirmation link is sent to the new email address. Rate-limited to 4 attempts per hour.
+        A confirmation link is sent to the new email address.
+        Rate-limited to 4 attempts per hour.
         """
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        user = request.user
+        user: User = request.user
         user.pending_email = serializer.validated_data["new_email"]
         user.save()
 
-        context = {"user": user}
-        ChangeEmailNoticeEmail(request, context).send([user.email])
-        ChangeEmailConfirmEmail(request, context).send([user.pending_email])
+        emails.ChangeEmailNoticeEmail(request=request, context={"user": user}).send(
+            to=[user.email]
+        )
+        emails.ChangeEmailConfirmEmail(request=request, context={"user": user}).send(
+            to=[user.pending_email]
+        )
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @extend_schema(
-        summary="Confirm email change",
-        tags=["Users"],
-    )
+    @extend_schema(summary="Confirm email change", tags=["Users"])
     @action(["post"], detail=False)
     def change_email_confirm(self, request, *args, **kwargs):
         """
@@ -129,65 +114,65 @@ class CustomUserViewSet(UserViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        user = serializer.user
-        old_email = user.email
-        user.email = user.pending_email
-        user.pending_email = None
-        user.save()
+        user: User = serializer.user
+        with transaction.atomic():
+            old_email = user.email
+            user.email = user.pending_email
+            user.pending_email = None
+            user.save()
 
-        context = {"user": user}
-        ChangeEmailAlertEmail(request, context).send([old_email])
-        ChangeEmailSuccessEmail(request, context).send([user.email])
+        emails.ChangeEmailAlertEmail(request=request, context={"user": user}).send(
+            to=[old_email]
+        )
+        emails.ChangeEmailSuccessEmail(request=request, context={"user": user}).send(
+            to=[user.email]
+        )
 
         return Response(status=status.HTTP_204_NO_CONTENT)
-    
-    @extend_schema(
-        summary="Request password reset",
-        tags=["Users"],
-    )
+
+    @extend_schema(summary="Request password reset", tags=["Users"])
     @action(["post"], detail=False)
     def reset_password(self, request, *args, **kwargs):
         """
         Request a password reset to the specified email address.
-        The number of attempts is limited to 4 per hour.
+        Rate-limited to 4 attempts per hour.
         """
+
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        user = serializer.get_user()
+        user: User = serializer.get_user()
         if user:
-            context = {"user": user}
-            ResetPasswordConfirmEmail(request, context).send([user.email])
+            emails.ResetPasswordConfirmEmail(
+                request=request, context={"user": user}
+            ).send(to=[user.email])
 
         return Response(status=status.HTTP_204_NO_CONTENT)
-    
-    @extend_schema(
-        summary="Confirm password reset",
-        tags=["Users"],
-    )
+
+    @extend_schema(summary="Confirm password reset", tags=["Users"])
     @action(["post"], detail=False)
     def reset_password_confirm(self, request, *args, **kwargs):
         """
         Confirm password reset and set a new one. The `uid` and `token` values
         must be extracted from the link sent to the user's email address.
         """
+
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        serializer.user.set_password(serializer.data["new_password"])
-        # if hasattr(serializer.user, "last_login"):
-        #     serializer.user.last_login = now()
-        serializer.user.save()
+        user: User = serializer.user
+        user.set_password(serializer.data["new_password"])
+        user.save()
 
-        context = {"user": serializer.user}
-        ResetPasswordSuccessEmail(request, context).send([serializer.user.email])
+        revoke_all_user_sessions(user)
+
+        emails.ResetPasswordSuccessEmail(request=request, context={"user": user}).send(
+            to=[user.email]
+        )
 
         return Response(status=status.HTTP_204_NO_CONTENT)
-    
-    @extend_schema(
-        summary="Lockdown user's account",
-        tags=["Users"],
-    )
+
+    @extend_schema(summary="Lockdown user's account", tags=["Users"])
     @action(["post"], detail=False)
     def lockdown_account(self, request, *args, **kwargs):
         """
@@ -200,31 +185,25 @@ class CustomUserViewSet(UserViewSet):
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user: User = serializer.user
 
+        user: User = serializer.user
         with transaction.atomic():
             user.set_unusable_password()
             user.deletion_scheduled_at = None
             user.pending_email = None
-            user.save(update_fields=["password", "deletion_scheduled_at", "pending_email"])
-        
-        logout(request=request)
-        for session in Session.objects.filter(expire_date__gte=timezone.now()):
-            try:
-                if str(user.pk) == session.get_decoded().get("_auth_user_id"):
-                    session.delete()
-            except Exception:
-                print("Failed to decode/delete session during lockdown.")
-                continue
+            user.save(
+                update_fields=["password", "deletion_scheduled_at", "pending_email"]
+            )
 
-        AccountLockdownNoticeEmail(request=request, context={"user": user}).send([user.email])
+        revoke_all_user_sessions(user)
+
+        emails.AccountLockdownNoticeEmail(request=request, context={"user": user}).send(
+            to=[user.email]
+        )
 
         return Response(status=status.HTTP_200_OK)
-    
-    @extend_schema(
-        summary="Cancel scheduled account deletion",
-        tags=["Users"],
-    )
+
+    @extend_schema(summary="Cancel scheduled account deletion", tags=["Users"])
     @action(["post"], detail=False)
     def cancel_deletion(self, request, *args, **kwargs):
         """
@@ -237,21 +216,23 @@ class CustomUserViewSet(UserViewSet):
 
         user: User = request.user
         if user.deletion_scheduled_at is None:
-            return Response({"detail": "No deletion scheduled."}, status=status.HTTP_200_OK)
-        
+            return Response(
+                data={"detail": "No deletion scheduled."}, status=status.HTTP_200_OK
+            )
+
         with transaction.atomic():
             user.is_active = True
             user.deletion_scheduled_at = None
             user.save(update_fields=["is_active", "deletion_scheduled_at"])
-        
-        AccountDeletionCanceledEmail(request=None, context=None).send([user.email])
-        
+
+        emails.AccountDeletionCanceledEmail().send(to=[user.email])
+
         return Response(status=status.HTTP_200_OK)
 
     @extend_schema(
         summary="Delete user's account",
         tags=["Users"],
-        request=CustomUserDeleteSerializer,
+        request=serializers.CustomUserDeleteSerializer,
     )
     def destroy(self, request, *args, **kwargs):
         """
@@ -268,74 +249,11 @@ class CustomUserViewSet(UserViewSet):
             user.is_active = False
             user.deletion_scheduled_at = timezone.now() + timezone.timedelta(hours=24)
             user.save(update_fields=["is_active", "deletion_scheduled_at"])
-        
-        # TODO: revoke all sessions
 
-        AccountDeletionAlertEmail(request, {"user": user}).send([user.email])
+        revoke_all_user_sessions(user)
 
-        return Response(status=status.HTTP_200_OK)
+        emails.AccountDeletionAlertEmail(request=request, context={"user": user}).send(
+            to=[user.email]
+        )
 
-
-class LoginView(generics.GenericAPIView):
-    """
-    Authenticates a user using either their username or email.
-    Upon successful authentication, the user is logged in and a session is created.
-    """
-
-    serializer_class = LoginSerializer
-    permission_classes = []
-
-    @extend_schema(summary="Log user in", tags=["Auth"])
-    def post(self, request, *args, **kwargs):
-        """
-        Log in using an existing user account.
-
-        User can control the duration of their session using the ``remember_me`` value:
-        - ``True`` will set the session cookie to expire in 2 weeks;
-        - ``False`` will set the expiration to 0 making it a session cookie that expires
-        when the browser closes.
-        """
-
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        username = serializer.validated_data.get("username")
-        email = serializer.validated_data.get("email")
-        password = serializer.validated_data.get("password")
-        remember_me = serializer.validated_data.get("remember_me")
-
-        login_method = {"username": username} if username else {"email": email}
-        user = authenticate(request=request, **login_method, password=password)
-
-        if user is None:
-            return Response(
-                data={"detail": "Invalid credentials."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        login(request=request, user=user)
-
-        if not remember_me:
-            # Session expires when browser is closed
-            request.session.set_expiry(0)
-        # else: Default Django session expiry (2 weeks)
-
-        return Response(status=status.HTTP_200_OK)
-
-
-class LogoutView(generics.GenericAPIView):
-    """
-    Log out the currently authenticated user by terminating their session.
-    """
-
-    serializer_class = EmptySerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    @extend_schema(summary="Log user out", tags=["Auth"])
-    def get(self, request, *args, **kwargs):
-        """
-        Log out by terminating the user's active session.
-        """
-
-        logout(request=request)
         return Response(status=status.HTTP_200_OK)

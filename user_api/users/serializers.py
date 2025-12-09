@@ -1,11 +1,11 @@
 from django.contrib.auth import get_user_model
+from djoser.compat import settings
 from djoser.serializers import (
     CurrentPasswordSerializer,
+    SendEmailResetSerializer,
     UserDeleteSerializer,
     UsernameSerializer,
-    SendEmailResetSerializer,
 )
-from djoser.compat import settings
 from rest_framework import serializers
 
 User = get_user_model()

@@ -1,5 +1,5 @@
 from django.urls import path
-from users.views import CustomUserViewSet
+from users.views.user import CustomUserViewSet
 
 urlpatterns = [
     path(

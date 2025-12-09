@@ -1,8 +1,8 @@
 from django.contrib.auth import get_user_model
-from django.contrib.sessions.models import Session
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from users.emails import AccountDeletionSuccessEmail
+from users.utils import revoke_all_user_sessions
 
 User = get_user_model()
 
@@ -26,28 +26,20 @@ class Command(BaseCommand):
         ).only("id", "email")
 
         if not users_to_delete.exists():
-            self.stdout.write("No users to delete.")
+            self.stdout.write(msg="No users to delete.")
             return
 
         deleted_count = 0
         for user in users_to_delete.iterator():
-            for session in Session.objects.filter(expire_date__gte=timezone.now()):
-                try:
-                    if str(user.pk) == session.get_decoded().get("_auth_user_id"):
-                        session.delete()
-                except Exception:
-                    print("Failed to decode/delete session during lockdown.")
-                    continue
+            revoke_all_user_sessions(user)
 
             AccountDeletionSuccessEmail(
-                context={
-                    "deletion_datetime": timezone.now().strftime(
-                        "%B %d, %Y at %H:%M UTC"
-                    )
-                }
-            ).send([user.email])
+                context={"deletion_datetime": timezone.now()}
+            ).send(to=[user.email])
 
             user.delete()
             deleted_count += 1
 
-        self.stdout.write(self.style.SUCCESS(f"Deleted {deleted_count} user(s)."))
+        self.stdout.write(
+            style_func=self.style.SUCCESS(f"Deleted {deleted_count} user(s).")
+        )

@@ -1,8 +1,9 @@
 import itertools
 
+from drf_spectacular.drainage import warn
 from drf_spectacular.openapi import AutoSchema
-from drf_spectacular.utils import OpenApiRequest
 from drf_spectacular.plumbing import build_media_type_object
+from drf_spectacular.utils import OpenApiRequest
 
 
 class CustomAutoSchema(AutoSchema):
@@ -19,11 +20,17 @@ class CustomAutoSchema(AutoSchema):
         if isinstance(request_serializer, dict):
             media_types_iter = request_serializer.items()
         else:
-            media_types_iter = zip(self.map_parsers(), itertools.repeat(request_serializer))
+            media_types_iter = zip(
+                self.map_parsers(), itertools.repeat(request_serializer)
+            )
 
         for media_type, serializer in media_types_iter:
             if isinstance(serializer, OpenApiRequest):
-                serializer, examples, encoding = serializer.request, serializer.examples, serializer.encoding
+                serializer, examples, encoding = (
+                    serializer.request,
+                    serializer.examples,
+                    serializer.encoding,
+                )
             else:
                 encoding, examples = None, None
 
@@ -33,12 +40,16 @@ class CustomAutoSchema(AutoSchema):
                 and not media_type.startswith("multipart")
             ):
                 warn(
-                    """Encodings object on media types other than "application/x-www-form-urlencoded" 
-                    or "multipart/*" have undefined behavior."""
+                    "Encodings object on media types other than 'application/x-www-form-urlencoded'"
+                    "or 'multipart/*' have undefined behavior."
                 )
 
-            examples = self._get_examples(serializer, direction, media_type, None, examples)
-            schema, partial_request_body_required = self._get_request_for_media_type(serializer, direction)
+            examples = self._get_examples(
+                serializer, direction, media_type, None, examples
+            )
+            schema, partial_request_body_required = self._get_request_for_media_type(
+                serializer, direction
+            )
 
             if schema is not None:
                 content.append((media_type, schema, examples, encoding))
