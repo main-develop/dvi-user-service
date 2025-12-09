@@ -1,6 +1,3 @@
-import datetime
-from django.utils import timezone
-from django.utils.formats import date_format
 from django.contrib.auth.tokens import default_token_generator
 from djoser import utils
 from djoser.email import (
@@ -32,19 +29,16 @@ class AccountDeletionAlertEmail(BaseDjoserEmail):
         context["cancel_deletion_url"] = "cancel-deletion/{uid}/{token}".format(**context)
         context["account_security_lockdown_url"] = "account-security/lockdown/{uid}/{token}".format(**context)
 
-        deletion_at = timezone.now() + timezone.timedelta(hours=24)
-        utc = datetime.timezone.utc
-        if timezone.is_naive(deletion_at):
-            deletion_at = timezone.make_aware(deletion_at, timezone=utc)
-        if deletion_at.tzinfo is None:
-            deletion_at = deletion_at.replace(tzinfo=utc)
+        deletion_scheduled_at = user.deletion_scheduled_at
 
-        deletion_utc = deletion_at.astimezone(utc)
-
-        context["account_deletion_datetime_utc"] = deletion_at.strftime("%B %d, %Y at %H:%M UTC")
-        context["account_deletion_date"] = deletion_at.strftime("%b %d, %Y")
+        context["account_deletion_datetime"] = deletion_scheduled_at.strftime("%B %d, %Y at %H:%M UTC")
+        context["account_deletion_date"] = deletion_scheduled_at.strftime("%b %d, %Y")
 
         return context
+
+
+class AccountDeletionSuccessEmail(BaseDjoserEmail):
+    template_name = "emails/account_deletion_success.html"
 
 
 class ChangeEmailAlertEmail(BaseDjoserEmail):

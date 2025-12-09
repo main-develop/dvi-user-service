@@ -24,6 +24,7 @@ from users.serializers import (
     EmptySerializer,
     LoginSerializer,
 )
+from users.models import User
 
 
 @extend_schema_view(
@@ -194,24 +195,28 @@ class CustomUserViewSet(UserViewSet):
         Immediate account security lockdown at the user's request to protect against
         potential unauthorized access (account takeover).
 
-        This action invalidates current password and revokes all user sessions.
+        This action invalidates current password, revokes all user sessions, and
+        cancels scheduled account deletion (if applicable).
         """
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
-        user = serializer.user
-        logout(request=request)
-
-        # add account deletion check
+        user: User = serializer.user
 
         with transaction.atomic():
             user.set_unusable_password()
-            user.save(update_fields=["password"])
-
-            for session in Session.objects.filter(expire_date__gte=timezone.now()):
+            user.deletion_scheduled_at = None
+            user.pending_email = None
+            user.save(update_fields=["password", "deletion_scheduled_at", "pending_email"])
+        
+        logout(request=request)
+        for session in Session.objects.filter(expire_date__gte=timezone.now()):
+            try:
                 if str(user.pk) == session.get_decoded().get("_auth_user_id"):
                     session.delete()
+            except Exception:
+                print("Failed to decode/delete session during lockdown.")
+                continue
 
         AccountLockdownNoticeEmail(request=request, context={"user": user}).send([user.email])
 
@@ -224,17 +229,19 @@ class CustomUserViewSet(UserViewSet):
     )
     def destroy(self, request, *args, **kwargs):
         """
-        Ensures the user is logged out before their account is permanently deleted.
-        Returns ``200 OK`` on successful deletion instead of the default ``204 NO CONTENT``.
+        Schedule permanent account deletion in 24 hours.
+        User can cancel it via ``/users/account-security/lockdown/`` endpoint
+        if they suspect takeover.
         """
 
-        user = request.user
+        user: User = request.user
         serializer = self.get_serializer(user, data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        context = {"user": user}
-        to = [user.email]
-        AccountDeletionAlertEmail(request, context).send(to)
+        user.deletion_scheduled_at = timezone.now() + timezone.timedelta(hours=24)
+        user.save(update_fields=["deletion_scheduled_at"])
+
+        AccountDeletionAlertEmail(request, {"user": user}).send([user.email])
 
         return Response(status=status.HTTP_200_OK)
 
