@@ -10,6 +10,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from users.emails import (
     AccountDeletionAlertEmail,
+    AccountDeletionCanceledEmail,
     AccountLockdownNoticeEmail,
     ChangeEmailAlertEmail,
     ChangeEmailConfirmEmail,
@@ -79,9 +80,7 @@ class CustomUserViewSet(UserViewSet):
     def get_serializer_class(self):
         if self.action == "change_email":
             return ChangeEmailSerializer
-        elif self.action == "change_email_confirm":
-            return UidAndTokenSerializer
-        elif self.action == "lockdown_account":
+        elif self.action in {"change_email_confirm", "lockdown_account", "cancel_deletion"}:
             return UidAndTokenSerializer
         
         return super().get_serializer_class()
@@ -220,6 +219,32 @@ class CustomUserViewSet(UserViewSet):
 
         AccountLockdownNoticeEmail(request=request, context={"user": user}).send([user.email])
 
+        return Response(status=status.HTTP_200_OK)
+    
+    @extend_schema(
+        summary="Cancel scheduled account deletion",
+        tags=["Users"],
+    )
+    @action(["post"], detail=False)
+    def cancel_deletion(self, request, *args, **kwargs):
+        """
+        Cancel a scheduled account deletion.
+        If no deletion is scheduled, returns success anyway (idempotent).
+        """
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user: User = request.user
+        if user.deletion_scheduled_at is None:
+            return Response({"detail": "No deletion scheduled."}, status=status.HTTP_200_OK)
+        
+        with transaction.atomic():
+            user.deletion_scheduled_at = None
+            user.save(update_fields=["deletion_scheduled_at"])
+        
+        AccountDeletionCanceledEmail(request=None, context=None).send([user.email])
+        
         return Response(status=status.HTTP_200_OK)
 
     @extend_schema(

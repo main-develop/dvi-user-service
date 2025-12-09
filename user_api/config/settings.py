@@ -185,6 +185,8 @@ DJOSER = {
     "EMAIL": {
         "activation": "users.emails.CustomActivationEmail",
         "confirmation": "users.emails.CustomConfirmationEmail",
+        "password_reset": "users.emails.PasswordResetEmail",
+        "password_changed_confirmation": "users.emails.PasswordChangedConfirmationEmail",
     },
     "SERIALIZERS": {
         "set_username": "users.serializers.CustomSetUsernameSerializer",

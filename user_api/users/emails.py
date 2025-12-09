@@ -41,6 +41,10 @@ class AccountDeletionSuccessEmail(BaseDjoserEmail):
     template_name = "emails/account_deletion_success.html"
 
 
+class AccountDeletionCanceledEmail(BaseDjoserEmail):
+    template_name = "emails/account_deletion_canceled.html"
+
+
 class ChangeEmailAlertEmail(BaseDjoserEmail):
     """
     Security alert sent to the old email address after the account's

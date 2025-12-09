@@ -42,4 +42,9 @@ urlpatterns = [
         CustomUserViewSet.as_view({"post": "lockdown_account"}),
         name="users_account_security_lockdown",
     ),
+    path(
+        "account-security/cancel-deletion/",
+        CustomUserViewSet.as_view({"post": "cancel_deletion"}),
+        name="users_account_security_cancel_deletion",
+    ),
 ]
