@@ -12,6 +12,18 @@ from users.models import User
 DATETIME_FORMAT = "%B %d, %Y at %H:%M UTC"
 
 
+class AccountSecurityLockdownMixin:
+    """ """
+
+    def get_context_data(self):
+        context = super().get_context_data()
+        context["account_security_lockdown_url"] = (
+            f"account-security/lockdown/{context["uid"]}/{context["token"]}"
+        )
+
+        return context
+
+
 class UidAndTokenMixin:
     """
     Mixin to add ``uid`` and ``token`` to email context data.
@@ -37,16 +49,15 @@ class CustomConfirmationEmail(ConfirmationEmail):
     template_name = "emails/email_verified.html"
 
 
-class AccountDeletionAlertEmail(BaseDjoserEmail, UidAndTokenMixin):
+class AccountDeletionAlertEmail(
+    BaseDjoserEmail, UidAndTokenMixin, AccountSecurityLockdownMixin
+):
     template_name = "emails/account_deletion_alert.html"
 
     def get_context_data(self):
         context = super().get_context_data()
         context["cancel_deletion_url"] = (
             f"cancel-deletion/{context["uid"]}/{context["token"]}"
-        )
-        context["account_security_lockdown_url"] = (
-            f"account-security/lockdown/{context["uid"]}/{context["token"]}"
         )
 
         deletion_scheduled_at = context["user"].deletion_scheduled_at
@@ -72,7 +83,18 @@ class AccountDeletionCanceledEmail(BaseDjoserEmail):
     template_name = "emails/account_deletion_canceled.html"
 
 
-class ChangeEmailAlertEmail(BaseDjoserEmail, UidAndTokenMixin):
+class AccountLockdownNoticeEmail(BaseDjoserEmail):
+    """
+    Notification email sent to the user after their account has been locked down.
+    This email contains a password reset link if user haven't reset their password yet.
+    """
+
+    template_name = "emails/account_security_lockdown_notice.html"
+
+
+class ChangeEmailAlertEmail(
+    BaseDjoserEmail, UidAndTokenMixin, AccountSecurityLockdownMixin
+):
     """
     Security alert sent to the old email address after the account's
     email was changed.
@@ -83,16 +105,10 @@ class ChangeEmailAlertEmail(BaseDjoserEmail, UidAndTokenMixin):
 
     template_name = "emails/change_email_alert.html"
 
-    def get_context_data(self):
-        context = super().get_context_data()
-        context["account_security_lockdown_url"] = (
-            f"account-security/lockdown/{context["uid"]}/{context["token"]}"
-        )
 
-        return context
-
-
-class ChangeEmailNoticeEmail(BaseDjoserEmail, UidAndTokenMixin):
+class ChangeEmailNoticeEmail(
+    BaseDjoserEmail, UidAndTokenMixin, AccountSecurityLockdownMixin
+):
     """
     Security notice sent to the current email address when someone
     requests to change the account's email.
@@ -102,14 +118,6 @@ class ChangeEmailNoticeEmail(BaseDjoserEmail, UidAndTokenMixin):
     """
 
     template_name = "emails/change_email_notice.html"
-
-    def get_context_data(self):
-        context = super().get_context_data()
-        context["account_security_lockdown_url"] = (
-            f"account-security/lockdown/{context["uid"]}/{context["token"]}"
-        )
-
-        return context
 
 
 class ChangeEmailConfirmEmail(BaseDjoserEmail, UidAndTokenMixin):
@@ -124,7 +132,9 @@ class ChangeEmailConfirmEmail(BaseDjoserEmail, UidAndTokenMixin):
 
     def get_context_data(self):
         context = super().get_context_data()
-        context["url"] = f"confirm-email/{context["uid"]}/{context["token"]}"
+        context["confirm_email_url"] = (
+            f"confirm-email/{context["uid"]}/{context["token"]}"
+        )
 
         return context
 
@@ -142,21 +152,7 @@ class ResetPasswordConfirmEmail(PasswordResetEmail):
     template_name = "emails/reset_password_confirm.html"
 
 
-class ResetPasswordSuccessEmail(PasswordChangedConfirmationEmail, UidAndTokenMixin):
+class ResetPasswordSuccessEmail(
+    PasswordChangedConfirmationEmail, UidAndTokenMixin, AccountSecurityLockdownMixin
+):
     template_name = "emails/reset_password_success.html"
-
-    def get_context_data(self):
-        context = super().get_context_data()
-        context["url"] = f"#/{context["uid"]}/{context["token"]}"
-        # TODO: rename url
-
-        return context
-
-
-class AccountLockdownNoticeEmail(BaseDjoserEmail):
-    """
-    Notification email sent to the user after their account has been locked down.
-    This email contains a password reset link if user haven't reset their password yet.
-    """
-
-    template_name = "emails/account_security_lockdown_notice.html"

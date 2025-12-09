@@ -8,7 +8,7 @@ Hi,
 We received a request to change the email address on your DVI account to {{ user.pending_email }}.
 
 To confirm this change, click on the link below:
-{{ protocol }}://{{ domain }}/{{ url|safe }}
+{{ protocol }}://{{ domain }}/{{ confirm_email_url|safe }}
 
 Didn't make this request? No problem, you can safely ignore this email.
 
@@ -73,7 +73,7 @@ Sincerely, The DVI Team
                 </p>
                 <p style="margin: 35px 0 35px 0">
                   <a
-                    href="{{ protocol }}://{{ domain }}/{{ url|safe }}"
+                    href="{{ protocol }}://{{ domain }}/{{ confirm_email_url|safe }}"
                     style="
                       background-color: #007bff;
                       color: #ffffff;
