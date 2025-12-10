@@ -36,10 +36,11 @@ Sincerely, The DVI Team
             style="
               background-color: #ffffff;
               border: 1px solid #ddd;
-              padding: 40px;
               border-radius: 8px;
               box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-              text-align: center;
+              color: #444444;
+              padding: 40px;
+              text-align: left;
               font-family: 'Roboto', sans-serif;
               font-weight: 500;
               font-style: normal;
@@ -54,24 +55,20 @@ Sincerely, The DVI Team
                     margin-top: 20px;
                   "
                 />
-                <h2 style="display: inline-block; color: #333333">
+                <h2 style="text-align: center; color: #333333">
                   New Email Address Confirmation
                 </h2>
 
-                <p style="margin-top: 35px; text-align: left; color: #444444">
-                  Hi,
-                </p>
+                <p style="margin-top: 35px">Hi,</p>
 
-                <p style="margin-top: 0; text-align: left; color: #444444">
+                <p style="margin-top: 0">
                   We received a request to change the email address on your
                   <strong>DVI</strong> account to
                   <strong>{{ user.pending_email }}</strong>.
                 </p>
 
-                <p style="text-align: left; color: #444444">
-                  To confirm this change, click on the button below:
-                </p>
-                <p style="margin: 35px 0 35px 0">
+                <p>To confirm this change, click on the button below:</p>
+                <p style="margin: 35px 0 35px 0; text-align: center">
                   <a
                     href="{{ protocol }}://{{ domain }}/{{ confirm_email_url|safe }}"
                     style="
@@ -86,14 +83,12 @@ Sincerely, The DVI Team
                   >
                 </p>
 
-                <p style="text-align: left; color: #444444">
+                <p>
                   Didn't make this request? No problem, you can safely ignore
                   this email.
                 </p>
 
-                <p style="margin-top: 35px; text-align: left; color: #444444">
-                  Sincerely,<br />The DVI Team
-                </p>
+                <p style="margin-top: 35px">Sincerely,<br />The DVI Team</p>
                 <hr
                   style="
                     border: 0;

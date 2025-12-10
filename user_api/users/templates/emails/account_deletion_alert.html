@@ -43,10 +43,11 @@ Sincerely, The DVI Team
             style="
               background-color: #ffffff;
               border: 1px solid #ddd;
-              padding: 40px;
               border-radius: 8px;
               box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-              text-align: center;
+              color: #444444;
+              padding: 40px;
+              text-align: left;
               font-family: 'Roboto', sans-serif;
               font-weight: 500;
               font-style: normal;
@@ -61,37 +62,29 @@ Sincerely, The DVI Team
                     margin-top: 20px;
                   "
                 />
-                <h2
-                  style="
-                    display: inline-block;
-                    text-align: left;
-                    color: #333333;
-                  "
-                >
+                <h2 style="text-align: center; color: #333333">
                   Account Deletion Alert
                 </h2>
 
-                <p style="margin-top: 35px; text-align: left; color: #444444">
-                  Dear user,
-                </p>
+                <p style="margin-top: 35px">Dear user,</p>
 
-                <p style="margin-top: 0; text-align: left; color: #444444">
+                <p style="margin-top: 0">
                   We received a request to permanently delete your
                   <strong>DVI</strong> account and all associated data. Your
                   account has been deactivated and will be deleted
                   <strong>in 24 hours</strong>.
                 </p>
 
-                <p style="text-align: left; color: #444444">
+                <p>
                   Deletion scheduled for:<br />
                   <strong>{{ account_deletion_datetime }}</strong>
                 </p>
 
-                <p style="text-align: left; color: #444444">
+                <p>
                   If this was you, no action is needed. If you want to keep your
                   account, click on the button below:
                 </p>
-                <p style="margin: 35px 0 35px 0">
+                <p style="margin: 35px 0 35px 0; text-align: center">
                   <a
                     href="{{ protocol }}://{{ domain }}/{{ cancel_deletion_url|safe }}"
                     style="
@@ -114,16 +107,16 @@ Sincerely, The DVI Team
                     padding: 14px;
                   "
                 >
-                  <p style="margin-top: 0; text-align: left; color: #444444">
+                  <p style="margin-top: 0">
                     <strong>If you did not request this</strong>, this may
                     indicate someone else is trying to delete your account.
                   </p>
-                  <p style="margin-top: 0; text-align: left; color: #444444">
+                  <p style="margin-top: 0">
                     Please immediately secure your account by clicking the
                     button below (account deletion will be cancelled
                     automatically):
                   </p>
-                  <p style="margin: 22px 0 14px 0">
+                  <p style="margin: 22px 0 14px 0; text-align: center">
                     <a
                       href="{{ protocol }}://{{ domain }}/{{ account_security_lockdown_url|safe }}"
                       style="
@@ -139,9 +132,7 @@ Sincerely, The DVI Team
                   </p>
                 </div>
 
-                <p style="margin-top: 35px; text-align: left; color: #444444">
-                  Sincerely,<br />The DVI Team
-                </p>
+                <p style="margin-top: 35px">Sincerely,<br />The DVI Team</p>
                 <hr
                   style="
                     border: 0;

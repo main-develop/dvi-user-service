@@ -9,7 +9,8 @@ Your DVI account has just been locked down at your request for security reasons.
 
 What this means:
 • Your previous password has been invalidated;
-• All sessions and devices have been logged out;
+• Pending email address change (if any) has been canceled;
+• All devices have been logged out;
 • No one can access your account until you set a new password.
 
 If you haven't reset your password yet, click on the link below to regain access:
@@ -41,10 +42,11 @@ Sincerely, The DVI Team
             style="
               background-color: #ffffff;
               border: 1px solid #ddd;
-              padding: 40px;
               border-radius: 8px;
               box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-              text-align: center;
+              color: #444444;
+              padding: 40px;
+              text-align: left;
               font-family: 'Roboto', sans-serif;
               font-weight: 500;
               font-style: normal;
@@ -59,33 +61,32 @@ Sincerely, The DVI Team
                     margin-top: 20px;
                   "
                 />
-                <h2 style="display: inline-block; color: #333333">
+                <h2 style="text-align: center; color: #333333">
                   Account Lockdown Notice
                 </h2>
 
-                <p style="margin-top: 35px; text-align: left; color: #444444">
-                  Dear user,
-                </p>
+                <p style="margin-top: 35px">Dear user,</p>
 
-                <p style="margin-top: 0; text-align: left; color: #444444">
+                <p style="margin-top: 0">
                   Your <strong>DVI</strong> account has just been locked
                   down at your request for security reasons.
                 </p>
 
-                <p style="margin-top: 0; text-align: left; color: #444444;">
+                <p style="margin-top: 0">
                     What this means:
-                    <ul style="text-align: left; color: #444444;">
+                    <ul>
                       <li>Your previous password has been invalidated;</li>
-                      <li>All sessions and devices have been logged out;</li>
+                      <li>Pending email address change (if any) has been canceled;</li>
+                      <li>All devices have been logged out;</li>
                       <li>No one can access your account until you set a new password.</li>
                     </ul>
                   </p>
 
-                <p style="text-align: left; color: #444444">
+                <p>
                   If you haven't reset your password yet, click on the button
                   below to regain access:
                 </p>
-                <p style="margin: 35px 0 35px 0">
+                <p style="margin: 35px 0 35px 0; text-align: center">
                   <a
                     href="{{ protocol }}://{{ domain }}/{{ url|safe }}"
                     style="
@@ -100,13 +101,9 @@ Sincerely, The DVI Team
                   >
                 </p>
 
-                <p style="text-align: left; color: #444444">
-                  Your account is now safe.
-                </p>
+                <p>Your account is now safe.</p>
 
-                <p style="margin-top: 35px; text-align: left; color: #444444">
-                  Sincerely,<br />The DVI Team
-                </p>
+                <p style="margin-top: 35px">Sincerely,<br />The DVI Team</p>
                 <hr
                   style="
                     border: 0;
