@@ -13,7 +13,13 @@ DATETIME_FORMAT = "%B %d, %Y at %H:%M UTC"
 
 
 class AccountSecurityLockdownMixin:
-    """ """
+    """
+    Adds a secure account lockdown URL to the email context.
+
+    This mixin is intended for use in emails related to sensitive account actions.
+    It generates a URL pointing to a lockdown endpoint that requires both the ``uid`` and a
+    ``token`` to proceed.
+    """
 
     def get_context_data(self):
         context = super().get_context_data()
@@ -26,7 +32,7 @@ class AccountSecurityLockdownMixin:
 
 class UidAndTokenMixin:
     """
-    Mixin to add ``uid`` and ``token`` to email context data.
+    This mixin is intended to add ``uid`` and ``token`` to email context data.
     Assumes ``user`` is available in the context from the base class.
     """
 
@@ -42,16 +48,31 @@ class UidAndTokenMixin:
 
 
 class CustomActivationEmail(ActivationEmail):
+    """
+    Activation email sent when a user needs to activate their account.
+    """
+
     template_name = "emails/email_verification.html"
 
 
 class CustomConfirmationEmail(ConfirmationEmail):
+    """
+    Confirmation email sent after a user successfully activates their account.
+    """
+
     template_name = "emails/email_verified.html"
 
 
 class AccountDeletionAlertEmail(
     BaseDjoserEmail, UidAndTokenMixin, AccountSecurityLockdownMixin
 ):
+    """
+    Email alerting the user that their account is scheduled for deletion.
+
+    Sent when a deletion request is initiated. The email includes a link to
+    cancel the deletion and a security lockdown URL for additional protection.
+    """
+
     template_name = "emails/account_deletion_alert.html"
 
     def get_context_data(self):
@@ -70,6 +91,10 @@ class AccountDeletionAlertEmail(
 
 
 class AccountDeletionSuccessEmail(BaseDjoserEmail):
+    """
+    Notification email sent after user's account has been successfully deleted.
+    """
+
     template_name = "emails/account_deletion_success.html"
 
     def get_context_data(self):
@@ -80,6 +105,12 @@ class AccountDeletionSuccessEmail(BaseDjoserEmail):
 
 
 class AccountDeletionCanceledEmail(BaseDjoserEmail):
+    """
+    Notification email sent after user's scheduled account deletion has been canceled.
+
+    Sent when the user clicks the cancellation link in the deletion alert email.
+    """
+
     template_name = "emails/account_deletion_canceled.html"
 
 
@@ -149,10 +180,20 @@ class ChangeEmailSuccessEmail(BaseDjoserEmail):
 
 
 class ResetPasswordConfirmEmail(PasswordResetEmail):
+    """
+    Notification email containing the password reset link.
+
+    Sent when user requests a password reset.
+    """
+
     template_name = "emails/reset_password_confirm.html"
 
 
 class ResetPasswordSuccessEmail(
     PasswordChangedConfirmationEmail, UidAndTokenMixin, AccountSecurityLockdownMixin
 ):
+    """
+    Notification email confirming that the user's password has been successfully changed.
+    """
+
     template_name = "emails/reset_password_success.html"

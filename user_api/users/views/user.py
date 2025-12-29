@@ -179,8 +179,8 @@ class CustomUserViewSet(UserViewSet):
         Immediate account security lockdown at the user's request to protect against
         potential unauthorized access (account takeover).
 
-        This action invalidates current password, revokes all user sessions, and
-        cancels scheduled account deletion (if applicable).
+        This action invalidates current password and revokes all user sessions. If applicable,
+        cancels scheduled account deletion and/or pending email.
         """
 
         serializer = self.get_serializer(data=request.data)

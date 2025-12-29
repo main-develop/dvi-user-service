@@ -5,4 +5,11 @@ from drf_spectacular.views import SpectacularSwaggerView
 
 # @method_decorator(login_required(login_url="/admin/login/"), name="get")
 class CustomSwaggerView(SpectacularSwaggerView):
-    pass
+    """
+    Custom Swagger view that requires authentication.
+
+    This class extends the base SpectacularSwaggerView to enforce login
+    requirements on the ``GET`` method, preventing unauthenticated access to
+    the Swagger UI documentation. Users attempting to access the view
+    without being logged in will be redirected to the Django admin login page.
+    """
