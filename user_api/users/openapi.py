@@ -1,9 +1,9 @@
 import itertools
 
 from drf_spectacular.drainage import warn
-from drf_spectacular.openapi import AutoSchema
 from drf_spectacular.plumbing import build_media_type_object
 from drf_spectacular.utils import OpenApiRequest
+from drf_standardized_errors.openapi import AutoSchema
 
 
 class CustomAutoSchema(AutoSchema):

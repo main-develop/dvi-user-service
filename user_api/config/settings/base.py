@@ -25,6 +25,21 @@ REST_FRAMEWORK = {
     ],
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_SCHEMA_CLASS": "users.openapi.CustomAutoSchema",
+    "EXCEPTION_HANDLER": "drf_standardized_errors.handler.exception_handler",
+}
+
+# drf-standardized-errors settings
+DRF_STANDARDIZED_ERRORS = {
+    # ONLY the responses that correspond to these status codes will appear
+    # in the API schema
+    "ALLOWED_ERROR_STATUS_CODES": [
+        "400",
+        "401",
+        "403",
+        "404",
+        "429",
+    ],
+    "EXCEPTION_FORMATTER_CLASS": "users.exception_formatter.CustomExceptionFormatter"
 }
 
 # Application definition
@@ -38,6 +53,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "djoser",
     "drf_spectacular",
+    "drf_standardized_errors",
     "users",
 ]
 MIDDLEWARE = [
