@@ -24,7 +24,7 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.SessionAuthentication"
     ],
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
-    "DEFAULT_SCHEMA_CLASS": "users.openapi.CustomAutoSchema",
+    "DEFAULT_SCHEMA_CLASS": "users.overrides.openapi.CustomAutoSchema",
     "EXCEPTION_HANDLER": "drf_standardized_errors.handler.exception_handler",
 }
 
@@ -39,7 +39,6 @@ DRF_STANDARDIZED_ERRORS = {
         "404",
         "429",
     ],
-    "EXCEPTION_FORMATTER_CLASS": "users.exception_formatter.CustomExceptionFormatter"
 }
 
 # Application definition
@@ -80,7 +79,7 @@ TEMPLATES = [
     },
 ]
 AUTHENTICATION_BACKENDS = [
-    "users.backends.CustomModelBackend",
+    "users.overrides.backends.CustomModelBackend",
 ]
 
 ROOT_URLCONF = "config.urls"

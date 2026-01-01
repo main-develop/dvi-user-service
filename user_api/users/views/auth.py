@@ -39,7 +39,16 @@ class LoginView(generics.GenericAPIView):
 
         if user is None:
             return Response(
-                data={"detail": "Invalid credentials."},
+                data={
+                    "type": "client_error",
+                    "errors": [
+                        {
+                            "code": "bad_request",
+                            "detail": "Invalid credentials.",
+                            "attr": None,
+                        },
+                    ],
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
 

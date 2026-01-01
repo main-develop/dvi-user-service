@@ -4,7 +4,7 @@ from users.views.user import CustomUserViewSet
 urlpatterns = [
     path(
         "me/",
-        CustomUserViewSet.as_view({"get": "retrieve", "delete": "destroy"}),
+        CustomUserViewSet.as_view({"get": "me", "delete": "destroy"}),
         name="users_me",
     ),
     path(

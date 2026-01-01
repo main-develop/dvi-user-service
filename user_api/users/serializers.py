@@ -69,10 +69,9 @@ class CustomSendEmailResetSerializer(SendEmailResetSerializer):
     during account security lockdown.
     """
 
-    def get_user(self, is_active=True):
+    def get_user(self):
         try:
             user = User._default_manager.get(
-                is_active=is_active,
                 **{self.email_field: self.data.get(self.email_field, "")},
             )
             return user
@@ -112,8 +111,6 @@ class LoginSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 "Username or email is required to log in."
             )
-        if len(password) < 8:
-            raise serializers.ValidationError("Invalid credentials.")
 
         return attrs
 

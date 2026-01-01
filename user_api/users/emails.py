@@ -64,7 +64,7 @@ class CustomConfirmationEmail(ConfirmationEmail):
 
 
 class AccountDeletionAlertEmail(
-    BaseDjoserEmail, UidAndTokenMixin, AccountSecurityLockdownMixin
+    AccountSecurityLockdownMixin, UidAndTokenMixin, BaseDjoserEmail
 ):
     """
     Email alerting the user that their account is scheduled for deletion.
@@ -114,7 +114,7 @@ class AccountDeletionCanceledEmail(BaseDjoserEmail):
     template_name = "emails/account_deletion_canceled.html"
 
 
-class AccountLockdownNoticeEmail(BaseDjoserEmail):
+class AccountLockdownNoticeEmail(UidAndTokenMixin, BaseDjoserEmail):
     """
     Notification email sent to the user after their account has been locked down.
     This email contains a password reset link if user haven't reset their password yet.
@@ -122,9 +122,17 @@ class AccountLockdownNoticeEmail(BaseDjoserEmail):
 
     template_name = "emails/account_security_lockdown_notice.html"
 
+    def get_context_data(self):
+        context = super().get_context_data()
+        context["password_reset_url"] = (
+            f"password/reset/{context["uid"]}/{context["token"]}"
+        )
+
+        return context
+
 
 class ChangeEmailAlertEmail(
-    BaseDjoserEmail, UidAndTokenMixin, AccountSecurityLockdownMixin
+    AccountSecurityLockdownMixin, UidAndTokenMixin, BaseDjoserEmail
 ):
     """
     Security alert sent to the old email address after the account's
@@ -138,7 +146,7 @@ class ChangeEmailAlertEmail(
 
 
 class ChangeEmailNoticeEmail(
-    BaseDjoserEmail, UidAndTokenMixin, AccountSecurityLockdownMixin
+    AccountSecurityLockdownMixin, UidAndTokenMixin, BaseDjoserEmail
 ):
     """
     Security notice sent to the current email address when someone
@@ -151,7 +159,7 @@ class ChangeEmailNoticeEmail(
     template_name = "emails/change_email_notice.html"
 
 
-class ChangeEmailConfirmEmail(BaseDjoserEmail, UidAndTokenMixin):
+class ChangeEmailConfirmEmail(UidAndTokenMixin, BaseDjoserEmail):
     """
     Email sent to the new address when a user requests to change their account email.
 
@@ -190,7 +198,7 @@ class ResetPasswordConfirmEmail(PasswordResetEmail):
 
 
 class ResetPasswordSuccessEmail(
-    PasswordChangedConfirmationEmail, UidAndTokenMixin, AccountSecurityLockdownMixin
+    AccountSecurityLockdownMixin, UidAndTokenMixin, PasswordChangedConfirmationEmail
 ):
     """
     Notification email confirming that the user's password has been successfully changed.

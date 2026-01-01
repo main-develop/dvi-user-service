@@ -21,7 +21,7 @@ from users.utils import revoke_all_user_sessions
         ),
         tags=["Auth"],
     ),
-    retrieve=extend_schema(
+    me=extend_schema(
         summary="Get user's profile",
         description="Get general information about the user.",
         tags=["Users"],
@@ -73,7 +73,7 @@ class CustomUserViewSet(UserViewSet):
         return super().get_serializer_class()
 
     def get_permissions(self):
-        if self.action == "lockdown_account":
+        if self.action in {"cancel_deletion", "lockdown_account"}:
             self.permission_classes = [permissions.AllowAny]
 
         return super().get_permissions()
@@ -161,8 +161,10 @@ class CustomUserViewSet(UserViewSet):
         serializer.is_valid(raise_exception=True)
 
         user: User = serializer.user
-        user.set_password(serializer.data["new_password"])
-        user.save()
+        with transaction.atomic():
+            user.set_password(serializer.data["new_password"])
+            user.is_active = True
+            user.save(update_fields=["password", "is_active"])
 
         revoke_all_user_sessions(user)
 
@@ -214,7 +216,7 @@ class CustomUserViewSet(UserViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        user: User = request.user
+        user: User = serializer.user
         if user.deletion_scheduled_at is None:
             return Response(
                 data={"detail": "No deletion scheduled."}, status=status.HTTP_200_OK

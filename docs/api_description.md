@@ -16,8 +16,8 @@ This is returned when an endpoint is called with an unexpected HTTP method. For 
   "errors": [
     {
       "code": "method_not_allowed",
-      "message": "Method \"get\" not allowed.",
-      "field": null
+      "detail": "Method \"get\" not allowed.",
+      "attr": null
     }
   ]
 }
@@ -33,8 +33,8 @@ This error is returned if the `Accept` header is submitted and contains a value 
   "errors": [
     {
       "code": "not_acceptable",
-      "message": "Could not satisfy the request Accept header.",
-      "field": null
+      "detail": "Could not satisfy the request Accept header.",
+      "attr": null
     }
   ]
 }
@@ -50,8 +50,8 @@ This error is returned when the request content type is not `json`. Here's how t
   "errors": [
     {
       "code": "unsupported_media_type",
-      "message": "Unsupported media type \"application/json\" in request.",
-      "field": null
+      "detail": "Unsupported media type \"application/json\" in request.",
+      "attr": null
     }
   ]
 }
@@ -67,8 +67,8 @@ This error is returned when the API server encounters an unexpected error. Here'
   "errors": [
     {
       "code": "error",
-      "message": "A server error occurred.",
-      "field": null
+      "detail": "A server error occurred.",
+      "attr": null
     }
   ]
 }
