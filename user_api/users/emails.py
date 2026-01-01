@@ -187,6 +187,10 @@ class ChangeEmailSuccessEmail(BaseDjoserEmail):
     template_name = "emails/change_email_success.html"
 
 
+class CustomPasswordChangedConfirmationEmail(PasswordChangedConfirmationEmail):
+    template_name = "emails/password_changed.html"
+
+
 class ResetPasswordConfirmEmail(PasswordResetEmail):
     """
     Notification email containing the password reset link.
@@ -204,4 +208,4 @@ class ResetPasswordSuccessEmail(
     Notification email confirming that the user's password has been successfully changed.
     """
 
-    template_name = "emails/reset_password_success.html"
+    template_name = "emails/password_changed.html"

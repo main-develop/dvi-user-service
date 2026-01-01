@@ -13,7 +13,7 @@ DJOSER = {
         "activation": "users.emails.CustomActivationEmail",
         "confirmation": "users.emails.CustomConfirmationEmail",
         "password_reset": "users.emails.PasswordResetEmail",
-        "password_changed_confirmation": "users.emails.PasswordChangedConfirmationEmail",
+        "password_changed_confirmation": "users.emails.CustomPasswordChangedConfirmationEmail",
     },
     "SERIALIZERS": {
         "set_username": "users.serializers.CustomSetUsernameSerializer",
