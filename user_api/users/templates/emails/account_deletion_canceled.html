@@ -1,0 +1,97 @@
+{% block subject %}
+Your DVI Account Deletion Has Been Canceled
+{% endblock subject %}
+
+{% block text_body %}
+Dear user,
+
+Your scheduled DVI account deletion has been successfully canceled.
+Your account is now fully reactivated.
+
+We're really glad you're staying with us!
+
+Sincerely, The DVI Team
+{% endblock text_body %}
+
+{% block html_body %}
+<html>
+  <head>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <table width="100%" cellspacing="0" cellpadding="0">
+      <tr>
+        <td align="center">
+          <table
+            width="600"
+            cellspacing="0"
+            cellpadding="0"
+            style="
+              background-color: #ffffff;
+              border: 1px solid #ddd;
+              border-radius: 8px;
+              box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+              color: #444444;
+              padding: 40px;
+              text-align: left;
+              font-family: 'Roboto', sans-serif;
+              font-weight: 500;
+              font-style: normal;
+            "
+          >
+            <tr>
+              <td>
+                <hr
+                  style="
+                    border: 0;
+                    border-top: 1px solid #ddd;
+                    margin-top: 20px;
+                  "
+                />
+                <h2 style="text-align: center; color: #333333">
+                  Account Deletion Canceled Notice
+                </h2>
+
+                <p style="margin-top: 35px">Dear user,</p>
+
+                <p style="margin-top: 0">
+                  Your scheduled <strong>DVI</strong> account deletion has been
+                  successfully canceled. Your account is now fully reactivated.
+                </p>
+
+                <p>We're really glad you're staying with us!</p>
+
+                <p style="margin-top: 35px">Sincerely,<br />The DVI Team</p>
+                <hr
+                  style="
+                    border: 0;
+                    border-top: 1px solid #ddd;
+                    margin-top: 20px;
+                  "
+                />
+              </td>
+            </tr>
+            <tr>
+              <td
+                style="
+                  padding-top: 20px;
+                  text-align: center;
+                  color: #666666;
+                  font-size: 13px;
+                "
+              >
+                &copy; 2025 DVI. All rights reserved.
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
+{% endblock html_body %}
