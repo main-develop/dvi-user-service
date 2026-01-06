@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+logs/
+tests/
+.git/
+.gitignore
+.github/
+.env
+.pylintrc
+README.md
+LICENSE
