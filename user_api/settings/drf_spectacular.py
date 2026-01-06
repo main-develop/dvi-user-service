@@ -3,7 +3,7 @@ import os
 from .base import BASE_DIR
 
 with open(
-    os.path.join(BASE_DIR.parent, "docs/api_description.md"), encoding="utf-8"
+    os.path.join(BASE_DIR, "docs/api_description.md"), encoding="utf-8"
 ) as file:
     api_description = file.read()
 

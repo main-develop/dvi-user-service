@@ -4,16 +4,17 @@ from pathlib import Path
 import environ
 from django.db.backends.postgresql.psycopg_any import IsolationLevel
 
-# Build paths inside the project like this: BASE_DIR / "subdir".
-# "user_api/config/settings/base.py"
+# Build paths inside the project like this: BASE_DIR / "subdir"
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 # Load environment variables
 env = environ.Env()
-environ.Env.read_env(os.path.join(BASE_DIR.parent, ".env"))
+# When running without Docker
+if os.path.exists(os.path.join(BASE_DIR, ".env")):
+    environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 
-SECRET_KEY = env("SECRET_KEY")
 DEBUG = env("DEBUG")  # SECURITY WARNING: don't run with debug turned on in production!
+SECRET_KEY = env("SECRET_KEY")
 ALLOWED_HOSTS = []
 
 # Django REST framework settings
@@ -82,18 +83,21 @@ AUTHENTICATION_BACKENDS = [
     "users.overrides.backends.CustomModelBackend",
 ]
 
-ROOT_URLCONF = "config.urls"
+ROOT_URLCONF = "user_api.urls"
 URL_FORMAT_OVERRIDE = None  # The name of the format query parameter
-WSGI_APPLICATION = "config.wsgi.application"
+WSGI_APPLICATION = "user_api.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
+        "NAME": env("POSTGRES_DB"),
+        "HOST": env("POSTGRES_HOST"),
+        "PORT": env("POSTGRES_PORT"),
+        "USER": env("POSTGRES_USER"),
+        "PASSWORD": env("POSTGRES_PASSWORD"),
         "OPTIONS": {
-            "service": "postgres_service",
-            "passfile": ".pgpass",
             "client_encoding": "UTF8",
             "isolation_level": IsolationLevel.READ_COMMITTED,
         },
@@ -132,3 +136,5 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 STATIC_URL = "static/"
+# Directory where static files will be collected for production
+STATIC_ROOT = os.path.join(BASE_DIR, "static")
