@@ -8,8 +8,8 @@ class CustomSwaggerView(SpectacularSwaggerView):
     """
     Custom Swagger view that requires authentication.
 
-    This class extends the base SpectacularSwaggerView to enforce login
-    requirements on the ``GET`` method, preventing unauthenticated access to
+    This class extends the base :class:`SpectacularSwaggerView` to enforce login
+    requirements on the GET method, preventing unauthenticated access to
     the Swagger UI documentation. Users attempting to access the view
     without being logged in will be redirected to the Django admin login page.
     """

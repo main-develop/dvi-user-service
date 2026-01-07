@@ -5,18 +5,15 @@ UserModel = get_user_model()
 
 
 class CustomModelBackend(ModelBackend):
-    """
-    Authenticates against settings.AUTH_USER_MODEL.
-    """
+    """Authenticates against settings.AUTH_USER_MODEL."""
 
     def authenticate(self, request, username=None, password=None, **kwargs):
         """
-        Authenticates a user by username or email, overriding the base method.
+        Authenticate a user by username or email. Overrides the base method.
 
         If an email is provided in **kwargs, attempts to retrieve the user by email.
         Otherwise, falls back to the username (or the model's USERNAME_FIELD).
         """
-
         email = kwargs.get("email")
 
         if email:
@@ -43,13 +40,11 @@ class CustomModelBackend(ModelBackend):
 
     async def aauthenticate(self, request, username=None, password=None, **kwargs):
         """
-        Authenticates a user by username or email, overriding the base method.
-        Asynchronous version.
+        Authenticate a user by username or email. Overrides the base async method.
 
         If an email is provided in **kwargs, attempts to retrieve the user by email.
         Otherwise, falls back to the username (or the model's USERNAME_FIELD).
         """
-
         email = kwargs.get("email")
 
         if email:

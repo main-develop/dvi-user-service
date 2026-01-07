@@ -14,11 +14,11 @@ DATETIME_FORMAT = "%B %d, %Y at %H:%M UTC"
 
 class AccountSecurityLockdownMixin:
     """
-    Adds a secure account lockdown URL to the email context.
+    Add a secure account lockdown URL to the email context.
 
     This mixin is intended for use in emails related to sensitive account actions.
-    It generates a URL pointing to a lockdown endpoint that requires both the ``uid`` and a
-    ``token`` to proceed.
+    Generates a URL pointing to a lockdown endpoint that requires both the
+    uid and a token to proceed.
     """
 
     def get_context_data(self):
@@ -32,8 +32,9 @@ class AccountSecurityLockdownMixin:
 
 class UidAndTokenMixin:
     """
-    This mixin is intended to add ``uid`` and ``token`` to email context data.
-    Assumes ``user`` is available in the context from the base class.
+    Add uid and token to email context data.
+
+    Assumes user is available in the context from the base class.
     """
 
     def get_context_data(self):
@@ -48,17 +49,13 @@ class UidAndTokenMixin:
 
 
 class CustomActivationEmail(ActivationEmail):
-    """
-    Activation email sent when a user needs to activate their account.
-    """
+    """Sent when a user needs to activate their account."""
 
     template_name = "emails/email_verification.html"
 
 
 class CustomConfirmationEmail(ConfirmationEmail):
-    """
-    Confirmation email sent after a user successfully activates their account.
-    """
+    """Sent after a user successfully activates their account."""
 
     template_name = "emails/email_verified.html"
 
@@ -67,10 +64,10 @@ class AccountDeletionAlertEmail(
     AccountSecurityLockdownMixin, UidAndTokenMixin, BaseDjoserEmail
 ):
     """
-    Email alerting the user that their account is scheduled for deletion.
+    Sent after user's account has been scheduled for deletion.
 
-    Sent when a deletion request is initiated. The email includes a link to
-    cancel the deletion and a security lockdown URL for additional protection.
+    Includes a link to cancel the deletion and a security lockdown URL
+    for additional protection.
     """
 
     template_name = "emails/account_deletion_alert.html"
@@ -91,9 +88,7 @@ class AccountDeletionAlertEmail(
 
 
 class AccountDeletionSuccessEmail(BaseDjoserEmail):
-    """
-    Notification email sent after user's account has been successfully deleted.
-    """
+    """Sent after user's account has been successfully deleted."""
 
     template_name = "emails/account_deletion_success.html"
 
@@ -105,19 +100,16 @@ class AccountDeletionSuccessEmail(BaseDjoserEmail):
 
 
 class AccountDeletionCanceledEmail(BaseDjoserEmail):
-    """
-    Notification email sent after user's scheduled account deletion has been canceled.
-
-    Sent when the user clicks the cancellation link in the deletion alert email.
-    """
+    """Sent after user's scheduled account deletion has been canceled."""
 
     template_name = "emails/account_deletion_canceled.html"
 
 
 class AccountLockdownNoticeEmail(UidAndTokenMixin, BaseDjoserEmail):
     """
-    Notification email sent to the user after their account has been locked down.
-    This email contains a password reset link if user haven't reset their password yet.
+    Sent after user's account has been locked down.
+
+    Contains a password reset link if user haven't reset their password yet.
     """
 
     template_name = "emails/account_security_lockdown_notice.html"
@@ -135,10 +127,9 @@ class ChangeEmailAlertEmail(
     AccountSecurityLockdownMixin, UidAndTokenMixin, BaseDjoserEmail
 ):
     """
-    Security alert sent to the old email address after the account's
-    email was changed.
+    Sent to the old email address after the account's email was changed.
 
-    This email gives the legitimate owner an immediate way to revoke sessions,
+    Gives the legitimate owner an immediate way to revoke sessions,
     reset password, etc., to protect their account in case of a breach.
     """
 
@@ -149,11 +140,12 @@ class ChangeEmailNoticeEmail(
     AccountSecurityLockdownMixin, UidAndTokenMixin, BaseDjoserEmail
 ):
     """
-    Security notice sent to the current email address when someone
-    requests to change the account's email.
+    Sent to the current email address when someone requests to
+    change the account's email.
 
-    This email notifies the legitimate account owner that an email change has been requested
-    and allows immediate action if this was an unauthorized attempt (account takeover).
+    Notifies the legitimate account owner that an email change has
+    been requested and allows immediate action if this was an unauthorized
+    attempt (account takeover).
     """
 
     template_name = "emails/change_email_notice.html"
@@ -161,9 +153,9 @@ class ChangeEmailNoticeEmail(
 
 class ChangeEmailConfirmEmail(UidAndTokenMixin, BaseDjoserEmail):
     """
-    Email sent to the new address when a user requests to change their account email.
+    Sent to the new address when a user requests to change their account email.
 
-    This email contains a confirmation link with a UID and token that the user
+    Contains a confirmation link with a UID and token that the user
     must click to activate the new email address.
     """
 
@@ -180,7 +172,7 @@ class ChangeEmailConfirmEmail(UidAndTokenMixin, BaseDjoserEmail):
 
 class ChangeEmailSuccessEmail(BaseDjoserEmail):
     """
-    Notification email sent to the user's new email address after they have
+    Sent to the user's new email address after they have
     successfully changed their account email.
     """
 
@@ -188,14 +180,16 @@ class ChangeEmailSuccessEmail(BaseDjoserEmail):
 
 
 class CustomPasswordChangedConfirmationEmail(PasswordChangedConfirmationEmail):
+    """Sent after the account password has been changed."""
+
     template_name = "emails/password_changed.html"
 
 
 class ResetPasswordConfirmEmail(PasswordResetEmail):
     """
-    Notification email containing the password reset link.
+    Sent when a user requests a password reset.
 
-    Sent when user requests a password reset.
+    Contains a password reset link.
     """
 
     template_name = "emails/reset_password_confirm.html"
@@ -204,8 +198,6 @@ class ResetPasswordConfirmEmail(PasswordResetEmail):
 class ResetPasswordSuccessEmail(
     AccountSecurityLockdownMixin, UidAndTokenMixin, PasswordChangedConfirmationEmail
 ):
-    """
-    Notification email confirming that the user's password has been successfully changed.
-    """
+    """Sent when the user's password has been successfully changed."""
 
     template_name = "emails/password_changed.html"

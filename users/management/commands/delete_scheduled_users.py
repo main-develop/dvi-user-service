@@ -11,10 +11,9 @@ class Command(BaseCommand):
     """
     Permanently delete user accounts that have been scheduled for deletion 24 hours ago.
 
-    This management command is designed to be run frequently
-    (every 5 minutes via cron/systemd/timer) to enforce the 24-hour grace period for account
-    deletion requests. This command is safe to run very frequently because the query is
-    index-bound and extremely cheap.
+    Designed to be run frequently (every 5 minutes via cron/systemd/timer) to enforce
+    the 24-hour grace period for account deletion requests. This command is safe to run
+    very frequently because the query is index-bound and extremely cheap.
     """
 
     help = "Permanently delete users that were scheduled for deletion 24 hours ago."

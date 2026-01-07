@@ -4,11 +4,7 @@ from users.models import User
 
 
 def revoke_all_user_sessions(user: User):
-    """
-    Revoke all active sessions for the given user. Corrupted sessions
-    are skipped silently.
-    """
-
+    """Revoke all active sessions for the given user."""
     for session in Session.objects.filter(expire_date__gte=timezone.now()):
         try:
             if str(user.pk) == session.get_decoded().get("_auth_user_id"):

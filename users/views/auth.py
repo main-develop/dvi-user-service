@@ -8,7 +8,8 @@ from users.models import User
 
 class LoginView(generics.GenericAPIView):
     """
-    Authenticates a user using either their username or email.
+    Authenticate a user using either their username or email.
+
     Upon successful authentication, the user is logged in and a session is created.
     """
 
@@ -25,7 +26,6 @@ class LoginView(generics.GenericAPIView):
         - ``False`` will set the expiration to 0 making it a session cookie that expires
         when the browser closes.
         """
-
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -63,18 +63,13 @@ class LoginView(generics.GenericAPIView):
 
 
 class LogoutView(generics.GenericAPIView):
-    """
-    Log out the currently authenticated user by terminating their session.
-    """
+    """Log out the currently authenticated user by terminating their session."""
 
     serializer_class = serializers.EmptySerializer
     permission_classes = [permissions.IsAuthenticated]
 
     @extend_schema(summary="Log user out", tags=["Auth"])
     def get(self, request, *args, **kwargs):
-        """
-        Log out by terminating the user's active session.
-        """
-
+        """Log out by terminating the user's active session."""
         logout(request)
         return Response(status=status.HTTP_200_OK)

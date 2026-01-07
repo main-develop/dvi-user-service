@@ -82,11 +82,11 @@ class CustomUserViewSet(UserViewSet):
     @action(["post"], detail=False)
     def change_email(self, request, *args, **kwargs):
         """
-        Allows an authenticated user to request a change of their email address.
-        A confirmation link is sent to the new email address.
-        Rate-limited to 4 attempts per hour.
-        """
+        Allow an authenticated user to request a change of their email address.
 
+        A confirmation link is sent to the new email address. Rate-limited to
+        4 attempts per hour.
+        """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -107,10 +107,9 @@ class CustomUserViewSet(UserViewSet):
     @action(["post"], detail=False)
     def change_email_confirm(self, request, *args, **kwargs):
         """
-        Confirms the new email address using the ``uid`` and ``token`` sent
-        in the confirmation email, finalising the email change and notifying the user.
+        Confirm the new email address using the uid and token sent in the
+        confirmation email, finalising the email change and notifying the user.
         """
-
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -135,9 +134,9 @@ class CustomUserViewSet(UserViewSet):
     def reset_password(self, request, *args, **kwargs):
         """
         Request a password reset to the specified email address.
+
         Rate-limited to 4 attempts per hour.
         """
-
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -153,10 +152,11 @@ class CustomUserViewSet(UserViewSet):
     @action(["post"], detail=False)
     def reset_password_confirm(self, request, *args, **kwargs):
         """
-        Confirm password reset and set a new one. The `uid` and `token` values
-        must be extracted from the link sent to the user's email address.
-        """
+        Confirm password reset and set a new one.
 
+        The uid and token values must be extracted from the link sent to
+        the user's email address.
+        """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -181,10 +181,9 @@ class CustomUserViewSet(UserViewSet):
         Immediate account security lockdown at the user's request to protect against
         potential unauthorized access (account takeover).
 
-        This action invalidates current password and revokes all user sessions. If applicable,
-        cancels scheduled account deletion and/or pending email.
+        This action invalidates current password and revokes all user sessions.
+        If applicable, cancels scheduled account deletion and/or pending email.
         """
-
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -210,9 +209,9 @@ class CustomUserViewSet(UserViewSet):
     def cancel_deletion(self, request, *args, **kwargs):
         """
         Cancel a scheduled account deletion.
+
         If no deletion is scheduled, returns success anyway (idempotent).
         """
-
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -239,10 +238,10 @@ class CustomUserViewSet(UserViewSet):
     def destroy(self, request, *args, **kwargs):
         """
         Schedule permanent account deletion in 24 hours.
-        User can cancel it via ``/users/account-security/lockdown/`` endpoint
-        if they suspect takeover.
-        """
 
+        User can cancel it via ``/users/account-security/lockdown/``
+        endpoint if they suspect takeover.
+        """
         user: User = request.user
         serializer = self.get_serializer(user, data=request.data)
         serializer.is_valid(raise_exception=True)

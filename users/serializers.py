@@ -13,8 +13,10 @@ User = get_user_model()
 
 class ChangeEmailSerializer(CurrentPasswordSerializer):
     """
-    Serializer for requesting email change. Requires current password confirmation
-    (twice) and ensures the new email differs from the current one.
+    Serializer for requesting email change.
+    
+    Requires current password confirmation (twice) and ensures
+    the new email differs from the current one.
     """
 
     new_email = serializers.EmailField(required=True)
@@ -42,7 +44,7 @@ class CustomUserDeleteSerializer(UserDeleteSerializer, CurrentPasswordSerializer
     """
     Serializer for permanent user account deletion.
 
-    Extends Djoser's default :class:`UserDeleteSerializer` by requiring the user to
+    Extends djoser's default :class:`UserDeleteSerializer` by requiring the user to
     confirm their current password twice as an extra security measure
     before allowing account deletion.
     """
@@ -63,7 +65,7 @@ class CustomSendEmailResetSerializer(SendEmailResetSerializer):
     """
     Serializer for requesting password reset.
 
-    Modifies Djoser's default :class:`SendEmailResetSerializer` by removing
+    Modifies djoser's default :class:`SendEmailResetSerializer` by removing
     ``"if user.has_usable_password()"`` guard. This allows password reset to work
     even after ``"user.set_unusable_password()"`` was deliberately called
     during account security lockdown.
@@ -124,7 +126,8 @@ class EmptySerializer(serializers.Serializer):
     See the issue for details: https://github.com/tfranzel/drf-spectacular/issues/1314
     https://github.com/tfranzel/drf-spectacular/issues/1314.
 
-    Note: this is a temporary fix; the issue is still open and may be resolved in the future.
+    Note: this is a temporary fix; the issue is still open and may be resolved
+    in the future.
     """
 
 
@@ -134,5 +137,5 @@ class CustomSetUsernameSerializer(UsernameSerializer):
 
     Djoser's default :class:`UsernameSerializer` requires the ``current_password``
     field. This custom serializer removes that requirement, since the security policy of
-    this project allows username changes without password confirmation.
+    this application allows username changes without password confirmation.
     """

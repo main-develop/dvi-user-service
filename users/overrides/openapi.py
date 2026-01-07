@@ -8,6 +8,11 @@ from drf_standardized_errors.openapi import AutoSchema
 
 class CustomAutoSchema(AutoSchema):
     def _get_request_body(self, direction="request"):
+        """
+        Override the base method to add DELETE to the tuple of methods that
+        can have a body, since the application logic requires passwords to be
+        passed in the body of the DELETE request.
+        """
         # only unsafe methods can have a body, including DELETE
         if self.method not in ("PUT", "PATCH", "POST", "DELETE"):
             return None
@@ -16,7 +21,8 @@ class CustomAutoSchema(AutoSchema):
         request_body_required = True
         content = []
 
-        # either implicit media-types via available parsers or manual list via decoration
+        # either implicit media-types via available parsers
+        # or manual list via decoration
         if isinstance(request_serializer, dict):
             media_types_iter = request_serializer.items()
         else:
