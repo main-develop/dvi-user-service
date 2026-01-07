@@ -7,6 +7,7 @@ from djoser.email import (
     PasswordChangedConfirmationEmail,
     PasswordResetEmail,
 )
+
 from users.models import User
 
 DATETIME_FORMAT = "%B %d, %Y at %H:%M UTC"

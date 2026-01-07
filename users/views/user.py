@@ -6,6 +6,7 @@ from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+
 from users import emails, serializers
 from users.models import User
 from users.utils import revoke_all_user_sessions
@@ -48,7 +49,8 @@ from users.utils import revoke_all_user_sessions
     resend_activation=extend_schema(
         summary="Resend confirmation email",
         description=(
-            "Resend the confirmation email. The number of attempts is limited to 4 per hour."
+            "Resend the confirmation email."
+            "The number of attempts is limited to 4 per hour."
         ),
         tags=["Auth"],
     ),

@@ -14,7 +14,7 @@ User = get_user_model()
 class ChangeEmailSerializer(CurrentPasswordSerializer):
     """
     Serializer for requesting email change.
-    
+
     Requires current password confirmation (twice) and ensures
     the new email differs from the current one.
     """
@@ -29,7 +29,9 @@ class ChangeEmailSerializer(CurrentPasswordSerializer):
         if attrs["new_email"] == user.email:
             raise serializers.ValidationError(
                 {
-                    "new_email": "The current email address cannot be used as the new one."
+                    "new_email": (
+                        "The current email address cannot be used as the new one."
+                    )
                 }
             )
         if attrs["current_password"] != attrs["re_current_password"]:
@@ -103,7 +105,6 @@ class LoginSerializer(serializers.Serializer):
     def validate(self, attrs):
         username = attrs.get("username")
         email = attrs.get("email")
-        password = attrs.get("password")
 
         if username and email:
             raise serializers.ValidationError(

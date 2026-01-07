@@ -46,7 +46,8 @@ class CustomAutoSchema(AutoSchema):
                 and not media_type.startswith("multipart")
             ):
                 warn(
-                    "Encodings object on media types other than 'application/x-www-form-urlencoded'"
+                    "Encodings object on media types other than"
+                    "'application/x-www-form-urlencoded'"
                     "or 'multipart/*' have undefined behavior."
                 )
 

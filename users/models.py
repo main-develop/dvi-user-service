@@ -14,5 +14,7 @@ class User(AbstractUser):
         blank=True,
         null=True,
         db_index=True,
-        help_text="If set, user will be deleted after 24 hours at the specified timestamp.",
+        help_text=(
+            "If set, user will be deleted after 24 hours at the specified timestamp."
+        ),
     )
