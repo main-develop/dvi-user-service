@@ -190,6 +190,7 @@ cython_debug/
 
 # Ruff stuff:
 .ruff_cache/
+.ruff.toml
 
 # PyPI configuration file
 .pypirc
@@ -205,3 +206,6 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Other
+.pylintrc

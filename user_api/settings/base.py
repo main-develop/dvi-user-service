@@ -4,27 +4,20 @@ from pathlib import Path
 import environ
 from django.db.backends.postgresql.psycopg_any import IsolationLevel
 
-# Build paths inside the project like this: BASE_DIR / "subdir".
-BASE_DIR = Path(__file__).resolve().parent.parent
-
+# Build paths inside the project like this: BASE_DIR / "subdir"
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 # Load environment variables
 env = environ.Env()
-environ.Env.read_env(os.path.join(BASE_DIR.parent, ".env"))
+# When running without Docker
+if os.path.exists(os.path.join(BASE_DIR, ".env")):
+    environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
-
+DEBUG = env("DEBUG")  # SECURITY WARNING: don't run with debug turned on in production!
 SECRET_KEY = env("SECRET_KEY")
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env("DEBUG")
-
 ALLOWED_HOSTS = []
 
-
 # Django REST framework settings
-
 REST_FRAMEWORK = {
     "DEFAULT_CONTENT_NEGOTIATION_CLASS": "rest_framework.negotiation.DefaultContentNegotiation",
     "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
@@ -32,33 +25,24 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.SessionAuthentication"
     ],
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
-    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_SCHEMA_CLASS": "users.overrides.openapi.CustomAutoSchema",
+    "EXCEPTION_HANDLER": "drf_standardized_errors.handler.exception_handler",
 }
 
-# drf-spectacular settings
-
-with open(
-    os.path.join(BASE_DIR.parent, "docs/api_description.md"), encoding="utf-8"
-) as file:
-    api_description = file.read()
-
-SPECTACULAR_SETTINGS = {
-    "TITLE": "DVI User API Specification",
-    "DESCRIPTION": api_description,
-    "VERSION": None,
-    "SERVE_INCLUDE_SCHEMA": False,
-    "SERVE_PERMISSIONS": ["rest_framework.permissions.IsAuthenticatedOrReadOnly"],
-    "AUTHENTICATION_WHITELIST": [],
-    "TAGS": [
-        {
-            "name": "Users",
-            "description": "Endpoints for managing and viewing user profiles and related data.",
-        }
+# drf-standardized-errors settings
+DRF_STANDARDIZED_ERRORS = {
+    # ONLY the responses that correspond to these status codes will appear
+    # in the API schema
+    "ALLOWED_ERROR_STATUS_CODES": [
+        "400",
+        "401",
+        "403",
+        "404",
+        "429",
     ],
 }
 
 # Application definition
-
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -67,10 +51,11 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    "djoser",
     "drf_spectacular",
+    "drf_standardized_errors",
     "users",
 ]
-
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -80,9 +65,6 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
-
-ROOT_URLCONF = "config.urls"
-
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -97,29 +79,38 @@ TEMPLATES = [
         },
     },
 ]
+AUTHENTICATION_BACKENDS = [
+    "users.overrides.backends.CustomModelBackend",
+]
 
-WSGI_APPLICATION = "config.wsgi.application"
-
+ROOT_URLCONF = "user_api.urls"
+URL_FORMAT_OVERRIDE = None  # The name of the format query parameter
+WSGI_APPLICATION = "user_api.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
+        "NAME": env("POSTGRES_DB"),
+        "HOST": env("POSTGRES_HOST"),
+        "PORT": env("POSTGRES_PORT"),
+        "USER": env("POSTGRES_USER"),
+        "PASSWORD": env("POSTGRES_PASSWORD"),
         "OPTIONS": {
-            "service": "postgres_service",
-            "passfile": ".pgpass",
             "client_encoding": "UTF8",
             "isolation_level": IsolationLevel.READ_COMMITTED,
         },
     }
 }
 
+AUTH_USER_MODEL = "users.User"
+# Default primary key field type
+# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
@@ -135,29 +126,15 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
-
 LANGUAGE_CODE = "en-us"
-
 TIME_ZONE = "UTC"
-
 USE_I18N = True
-
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
-
 STATIC_URL = "static/"
-
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
-
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
-# The name of the format query parameter
-
-URL_FORMAT_OVERRIDE = None
+# Directory where static files will be collected for production
+STATIC_ROOT = os.path.join(BASE_DIR, "static")
