@@ -30,12 +30,16 @@ class LoginView(generics.GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        username = serializer.validated_data.get("username")
-        email = serializer.validated_data.get("email")
+        username_or_email = serializer.validated_data.get("username_or_email")
+        is_email = serializer.context.get("is_email")
         password = serializer.validated_data.get("password")
         remember_me = serializer.validated_data.get("remember_me")
 
-        login_method = {"username": username} if username else {"email": email}
+        login_method = (
+            {"email": username_or_email}
+            if is_email
+            else {"username": username_or_email}
+        )
         user: User = authenticate(request=request, **login_method, password=password)
 
         if user is None:

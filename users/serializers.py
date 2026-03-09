@@ -1,4 +1,6 @@
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
+from django.core.validators import MaxLengthValidator, validate_email
 from djoser.compat import settings
 from djoser.serializers import (
     CurrentPasswordSerializer,
@@ -94,28 +96,23 @@ class LoginSerializer(serializers.Serializer):
     Serializer for handling user login credentials.
 
     Validates input for user authentication, allowing login via either
-    username or email (but not both), along with a password check.
+    username or email, along with a password check.
     """
 
-    username = serializers.CharField(required=False)
-    email = serializers.EmailField(required=False)
+    username_or_email = serializers.CharField(
+        validators=[MaxLengthValidator(254)], required=True
+    )
     password = serializers.CharField(required=True)
     remember_me = serializers.BooleanField(required=False, default=False)
 
-    def validate(self, attrs):
-        username = attrs.get("username")
-        email = attrs.get("email")
+    def validate_username_or_email(self, value):
+        try:
+            validate_email(value)
+            self.context["is_email"] = True
+        except ValidationError:
+            self.context["is_email"] = False
 
-        if username and email:
-            raise serializers.ValidationError(
-                "Either provide email or username to login, not both."
-            )
-        if not (username or email):
-            raise serializers.ValidationError(
-                "Username or email is required to log in."
-            )
-
-        return attrs
+        return value
 
 
 class EmptySerializer(serializers.Serializer):
