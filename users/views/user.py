@@ -17,7 +17,7 @@ from users.utils import revoke_all_user_sessions
         summary="Register a new user",
         description=(
             "Register a new user in the system. A unique `email`, `username`, "
-            "and matching `password` and `re_password` are required for "
+            "and matching `password` and `confirm_password` are required for "
             "successful registration."
         ),
         tags=["Auth"],

@@ -19,6 +19,7 @@ DJOSER = {
         "set_username": "users.serializers.CustomSetUsernameSerializer",
         "user_delete": "users.serializers.CustomUserDeleteSerializer",
         "password_reset": "users.serializers.CustomSendEmailResetSerializer",
+        "user_create_password_retype": "users.serializers.CustomUserCreatePasswordRetypeSerializer",
     },
 }
 

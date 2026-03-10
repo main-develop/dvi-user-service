@@ -5,6 +5,7 @@ from djoser.compat import settings
 from djoser.serializers import (
     CurrentPasswordSerializer,
     SendEmailResetSerializer,
+    UserCreateSerializer,
     UserDeleteSerializer,
     UsernameSerializer,
 )
@@ -22,7 +23,7 @@ class ChangeEmailSerializer(CurrentPasswordSerializer):
     """
 
     new_email = serializers.EmailField(required=True)
-    re_current_password = serializers.CharField(required=True)
+    confirm_password = serializers.CharField(required=True)
 
     def validate(self, attrs):
         attrs = super().validate(attrs)
@@ -36,12 +37,31 @@ class ChangeEmailSerializer(CurrentPasswordSerializer):
                     )
                 }
             )
-        if attrs["current_password"] != attrs["re_current_password"]:
-            raise serializers.ValidationError(
-                {"current_password": "Passwords do not match."}
-            )
+        if attrs["password"] != attrs["confirm_password"]:
+            raise serializers.ValidationError({"password": "Passwords do not match."})
 
         return attrs
+
+
+class CustomUserCreatePasswordRetypeSerializer(UserCreateSerializer):
+    default_error_messages = {
+        "password_mismatch": settings.CONSTANTS.messages.PASSWORD_MISMATCH_ERROR
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["confirm_password"] = serializers.CharField(
+            style={"input_type": "password"}
+        )
+
+    def validate(self, attrs):
+        self.fields.pop("confirm_password", None)
+        confirm_password = attrs.pop("confirm_password")
+        attrs = super().validate(attrs)
+        if attrs["password"] == confirm_password:
+            return attrs
+        else:
+            self.fail("password_mismatch")
 
 
 class CustomUserDeleteSerializer(UserDeleteSerializer, CurrentPasswordSerializer):
@@ -53,14 +73,12 @@ class CustomUserDeleteSerializer(UserDeleteSerializer, CurrentPasswordSerializer
     before allowing account deletion.
     """
 
-    re_current_password = serializers.CharField(required=True)
+    confirm_password = serializers.CharField(required=True)
 
     def validate(self, attrs):
         attrs = super().validate(attrs)
-        if attrs["current_password"] != attrs["re_current_password"]:
-            raise serializers.ValidationError(
-                {"current_password": "Passwords do not match."}
-            )
+        if attrs["password"] != attrs["confirm_password"]:
+            raise serializers.ValidationError({"password": "Passwords do not match."})
 
         return attrs
 
