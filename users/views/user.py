@@ -1,5 +1,9 @@
+from django.contrib.auth.tokens import default_token_generator
+from django.core.cache import cache
 from django.db import transaction
 from django.utils import timezone
+from djoser import signals, utils
+from djoser.compat import settings
 from djoser.serializers import UidAndTokenSerializer
 from djoser.views import UserViewSet
 from drf_spectacular.utils import extend_schema, extend_schema_view
@@ -10,6 +14,7 @@ from rest_framework.response import Response
 from users import emails, serializers
 from users.models import User
 from users.utils import revoke_all_user_sessions
+from users.services.otp import generate_and_set_otp, verify_otp, OTPPurpose
 
 
 @extend_schema_view(
@@ -79,6 +84,42 @@ class CustomUserViewSet(UserViewSet):
             self.permission_classes = [permissions.AllowAny]
 
         return super().get_permissions()
+
+    def perform_create(self, serializer, *args, **kwargs):
+        user: User = serializer.save(*args, **kwargs)
+        signals.user_registered.send(
+            sender=self.__class__, user=user, request=self.request
+        )
+
+        otp = generate_and_set_otp(user.email, OTPPurpose.ACCOUNT_ACTIVATION)
+        context = {"user": user, "otp": otp}
+
+        if settings.SEND_ACTIVATION_EMAIL:
+            settings.EMAIL.activation(request=self.request, context=context).send(
+                to=[user.email]
+            )
+        elif settings.SEND_CONFIRMATION_EMAIL:
+            settings.EMAIL.confirmation(request=self.request, context=context).send(
+                to=[user.email]
+            )
+    
+    @action(["post"], detail=False)
+    def activation(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user: User = verify_otp(serializer.validated_data["email"], serializer.validated_data["otp"], OTPPurpose.ACCOUNT_ACTIVATION)
+        user.is_active = True
+        user.save()
+
+        signals.user_activated.send(
+            sender=self.__class__, user=user, request=self.request
+        )
+
+        if settings.SEND_CONFIRMATION_EMAIL:
+            settings.EMAIL.confirmation(request=self.request, context={"user": user}).send(to=[user.email])
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @extend_schema(summary="Request email change", tags=["Users"])
     @action(["post"], detail=False)

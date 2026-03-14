@@ -14,6 +14,11 @@ from rest_framework import serializers
 User = get_user_model()
 
 
+class ActivationSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
+    otp = serializers.CharField(max_length=6, min_length=6, required=True)
+
+
 class ChangeEmailSerializer(CurrentPasswordSerializer):
     """
     Serializer for requesting email change.
