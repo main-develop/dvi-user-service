@@ -8,6 +8,8 @@ from djoser.serializers import (
     UserCreateSerializer,
     UserDeleteSerializer,
     UsernameSerializer,
+    PasswordSerializer,
+    UidAndTokenSerializer,
 )
 from rest_framework import serializers
 
@@ -67,6 +69,42 @@ class CustomUserCreatePasswordRetypeSerializer(UserCreateSerializer):
             return attrs
         else:
             self.fail("password_mismatch")
+
+
+class PasswordRetypeSerializer(PasswordSerializer):
+    confirm_password = serializers.CharField()
+
+    default_error_messages = {
+        "password_mismatch": settings.CONSTANTS.messages.PASSWORD_MISMATCH_ERROR
+    }
+
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+        if attrs["new_password"] == attrs["confirm_password"]:
+            return attrs
+        else:
+            self.fail("password_mismatch")
+
+
+class SetPasswordRetypeSerializer(PasswordRetypeSerializer, CurrentPasswordSerializer):
+    pass
+
+
+class PasswordResetVerifyOTPSerializer(serializers.Serializer):
+    """
+    Serializer for verifying the OTP for password reset purpose.
+    """
+
+    email = serializers.EmailField(required=True)
+    otp = serializers.CharField(max_length=6, min_length=6, required=True)
+
+
+class PasswordResetConfirmRetypeSerializer(
+    UidAndTokenSerializer, PasswordRetypeSerializer
+):
+    """
+    Serializer for setting new password using `uid` and `token` from the OTP verification step.
+    """
 
 
 class CustomUserDeleteSerializer(UserDeleteSerializer, CurrentPasswordSerializer):

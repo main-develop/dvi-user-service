@@ -1,5 +1,4 @@
 from django.contrib.auth.tokens import default_token_generator
-from django.core.cache import cache
 from django.db import transaction
 from django.utils import timezone
 from djoser import signals, utils
@@ -13,8 +12,8 @@ from rest_framework.response import Response
 
 from users import emails, serializers
 from users.models import User
+from users.services.otp import OTPPurpose, generate_and_set_otp, verify_otp
 from users.utils import revoke_all_user_sessions
-from users.services.otp import generate_and_set_otp, verify_otp, OTPPurpose
 
 
 @extend_schema_view(
@@ -70,6 +69,8 @@ class CustomUserViewSet(UserViewSet):
     def get_serializer_class(self):
         if self.action == "change_email":
             return serializers.ChangeEmailSerializer
+        if self.action == "reset_password_verify":
+            return serializers.PasswordResetVerifyOTPSerializer
         if self.action in {
             "change_email_confirm",
             "lockdown_account",
@@ -80,7 +81,12 @@ class CustomUserViewSet(UserViewSet):
         return super().get_serializer_class()
 
     def get_permissions(self):
-        if self.action in {"cancel_deletion", "lockdown_account"}:
+        if self.action in {
+            "reset_password_verify",
+            "reset_password_confirm",
+            "cancel_deletion",
+            "lockdown_account",
+        }:
             self.permission_classes = [permissions.AllowAny]
 
         return super().get_permissions()
@@ -91,8 +97,10 @@ class CustomUserViewSet(UserViewSet):
             sender=self.__class__, user=user, request=self.request
         )
 
-        otp = generate_and_set_otp(user.email, OTPPurpose.ACCOUNT_ACTIVATION)
-        context = {"user": user, "otp": otp}
+        context = {
+            "user": user,
+            "otp": generate_and_set_otp(user.email, OTPPurpose.ACCOUNT_ACTIVATION),
+        }
 
         if settings.SEND_ACTIVATION_EMAIL:
             settings.EMAIL.activation(request=self.request, context=context).send(
@@ -102,13 +110,17 @@ class CustomUserViewSet(UserViewSet):
             settings.EMAIL.confirmation(request=self.request, context=context).send(
                 to=[user.email]
             )
-    
+
     @action(["post"], detail=False)
     def activation(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        user: User = verify_otp(serializer.validated_data["email"], serializer.validated_data["otp"], OTPPurpose.ACCOUNT_ACTIVATION)
+        user: User = verify_otp(
+            serializer.validated_data["email"],
+            serializer.validated_data["otp"],
+            OTPPurpose.ACCOUNT_ACTIVATION,
+        )
         user.is_active = True
         user.save()
 
@@ -117,7 +129,9 @@ class CustomUserViewSet(UserViewSet):
         )
 
         if settings.SEND_CONFIRMATION_EMAIL:
-            settings.EMAIL.confirmation(request=self.request, context={"user": user}).send(to=[user.email])
+            settings.EMAIL.confirmation(
+                request=self.request, context={"user": user}
+            ).send(to=[user.email])
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -176,7 +190,7 @@ class CustomUserViewSet(UserViewSet):
     @action(["post"], detail=False)
     def reset_password(self, request, *args, **kwargs):
         """
-        Request a password reset to the specified email address.
+        Send a 6-digit OTP to the specified email for password reset purpose.
 
         Rate-limited to 4 attempts per hour.
         """
@@ -185,27 +199,51 @@ class CustomUserViewSet(UserViewSet):
 
         user: User = serializer.get_user()
         if user:
-            emails.ResetPasswordConfirmEmail(
-                request=request, context={"user": user}
+            emails.ResetPasswordOTPConfirmEmail(
+                request=request,
+                context={
+                    "user": user,
+                    "otp": generate_and_set_otp(user.email, OTPPurpose.PASSWORD_RESET),
+                },
             ).send(to=[user.email])
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @extend_schema(summary="Confirm password reset", tags=["Users"])
+    @extend_schema(summary="Verify OTP for password reset", tags=["Users"])
+    @action(["post"], detail=False)
+    def reset_password_verify(self, request, *args, **kwargs):
+        """
+        Verify OTP for password reset purpose.
+
+        On success returns the `uid` and `token` values that must be used in the
+        password reset confirm step.
+        """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user: User = verify_otp(
+            serializer.validated_data["email"],
+            serializer.validated_data["otp"],
+            OTPPurpose.PASSWORD_RESET,
+        )
+
+        uid = utils.encode_uid(user.pk)
+        token = default_token_generator.make_token(user)
+
+        return Response({"uid": uid, "token": token}, status=status.HTTP_200_OK)
+
+    @extend_schema(summary="Set new password", tags=["Users"])
     @action(["post"], detail=False)
     def reset_password_confirm(self, request, *args, **kwargs):
         """
-        Confirm password reset and set a new one.
-
-        The uid and token values must be extracted from the link sent to
-        the user's email address.
+        Set new password using `uid` and `token` from the OTP verification step.
         """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         user: User = serializer.user
         with transaction.atomic():
-            user.set_password(serializer.data["new_password"])
+            user.set_password(serializer.validated_data["new_password"])
             user.is_active = True
             user.save(update_fields=["password", "is_active"])
 

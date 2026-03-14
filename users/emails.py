@@ -186,14 +186,14 @@ class CustomPasswordChangedConfirmationEmail(PasswordChangedConfirmationEmail):
     template_name = "emails/password_changed.html"
 
 
-class ResetPasswordConfirmEmail(PasswordResetEmail):
+class ResetPasswordOTPConfirmEmail(PasswordResetEmail):
     """
     Sent when a user requests a password reset.
 
     Contains a password reset link.
     """
 
-    template_name = "emails/reset_password_confirm.html"
+    template_name = "emails/reset_password_otp_confirm.html"
 
 
 class ResetPasswordSuccessEmail(

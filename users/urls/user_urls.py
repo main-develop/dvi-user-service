@@ -34,6 +34,11 @@ urlpatterns = [
         name="users_password_reset",
     ),
     path(
+        "password/reset/verify/",
+        CustomUserViewSet.as_view({"post": "reset_password_verify"}),
+        name="users_password_reset_verify",
+    ),
+    path(
         "password/reset/confirm/",
         CustomUserViewSet.as_view({"post": "reset_password_confirm"}),
         name="users_password_reset_confirm",
