@@ -10,7 +10,7 @@ from rest_framework import permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from users import emails
+from users.emails import EmailPurpose, send_email
 from users.models import User
 from users.serializers.user import (
     ChangeEmailSerializer,
@@ -18,7 +18,7 @@ from users.serializers.user import (
     VerificationPurpose,
     VerifyOtpSerializer,
 )
-from users.services.otp import generate_and_set_otp, verify_otp
+from users.services.otp import verify_otp
 from users.utils import revoke_all_user_sessions
 
 
@@ -90,13 +90,10 @@ class CustomUserViewSet(UserViewSet):
         )
 
         if settings.SEND_ACTIVATION_EMAIL:
-            context = {
-                "user": user,
-                "otp": generate_and_set_otp(user.email),
-            }
-
-            emails.AccountActivationEmail(request=self.request, context=context).send(
-                to=[user.email]
+            send_email(
+                purpose=EmailPurpose.ACCOUNT_ACTIVATION,
+                request=self.request,
+                to=user.email,
             )
 
     @extend_schema(summary="Verify user's email", tags=["Auth"])
@@ -104,8 +101,8 @@ class CustomUserViewSet(UserViewSet):
     def verify(self, request, *args, **kwargs):
         """
         Verify user's email address to complete specific purpose.
-        If purpose of verification is password reset, return the `uid` and `token` values
-        that are needed in the confirmation step.
+        If purpose of verification is password reset, return the `uid` and `token`
+        values that are needed in the confirmation step.
         """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -124,9 +121,11 @@ class CustomUserViewSet(UserViewSet):
             )
 
             if settings.SEND_CONFIRMATION_EMAIL:
-                emails.AccountActivatedEmail(
-                    request=self.request, context={"user": user}
-                ).send(to=[user.email])
+                send_email(
+                    purpose=EmailPurpose.ACCOUNT_ACTIVATED,
+                    request=self.request,
+                    to=user.email,
+                )
 
         if serializer.validated_data["purpose"] == VerificationPurpose.RESET_PASSWORD:
             uid = utils.encode_uid(user.pk)
@@ -149,15 +148,18 @@ class CustomUserViewSet(UserViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
+        purpose = serializer.validated_data["purpose"]
+
         user: User = serializer.get_user(
-            is_active=serializer.validated_data["purpose"]
-            != VerificationPurpose.ACTIVATION
+            is_active=purpose != VerificationPurpose.ACTIVATION
         )
         if user:
-            context = {"otp": generate_and_set_otp(user.email)}
-            emails.AccountActivationEmail(request=self.request, context=context).send(
-                to=[user.email]
-            )
+            if purpose == VerificationPurpose.RESET_PASSWORD:
+                email_purpose = EmailPurpose.RESET_PASSWORD
+            else:
+                email_purpose = EmailPurpose.ACCOUNT_ACTIVATION
+
+            send_email(purpose=email_purpose, request=self.request, to=user.email)
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -177,11 +179,17 @@ class CustomUserViewSet(UserViewSet):
         user.pending_email = serializer.validated_data["new_email"]
         user.save()
 
-        emails.ChangeEmailNoticeEmail(request=request, context={"user": user}).send(
-            to=[user.email]
+        send_email(
+            purpose=EmailPurpose.CHANGE_EMAIL_NOTICE,
+            request=request,
+            context={"user": user},
+            to=user.email,
         )
-        emails.ChangeEmailEmail(request=request, context={"user": user}).send(
-            to=[user.pending_email]
+        send_email(
+            purpose=EmailPurpose.CHANGE_EMAIL,
+            request=request,
+            context={"user": user},
+            to=user.pending_email
         )
 
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -196,18 +204,24 @@ class CustomUserViewSet(UserViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        user: User = serializer.user
+        user: User = verify_otp(serializer.user.email)
         with transaction.atomic():
             old_email = user.email
             user.email = user.pending_email
             user.pending_email = None
             user.save()
 
-        emails.EmailChangedNoticeEmail(request=request, context={"user": user}).send(
-            to=[old_email]
+        send_email(
+            purpose=EmailPurpose.EMAIL_CHANGED_NOTICE,
+            request=request,
+            context={"user": user},
+            to=old_email,
         )
-        emails.EmailChangedEmail(request=request, context={"user": user}).send(
-            to=[user.email]
+        send_email(
+            purpose=EmailPurpose.EMAIL_CHANGED,
+            request=request,
+            context={"user": user},
+            to=user.email,
         )
 
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -225,13 +239,9 @@ class CustomUserViewSet(UserViewSet):
 
         user: User = serializer.get_user()
         if user:
-            emails.ResetPasswordEmail(
-                request=request,
-                context={
-                    "user": user,
-                    "otp": generate_and_set_otp(user.email),
-                },
-            ).send(to=[user.email])
+            send_email(
+                purpose=EmailPurpose.RESET_PASSWORD, request=request, to=user.email
+            )
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -251,9 +261,11 @@ class CustomUserViewSet(UserViewSet):
             user.save(update_fields=["password", "is_active"])
 
         revoke_all_user_sessions(user)
-
-        emails.PasswordChangedEmail(request=request, context={"user": user}).send(
-            to=[user.email]
+        send_email(
+            purpose=EmailPurpose.PASSWORD_CHANGED,
+            request=request,
+            context={"user": user},
+            to=user.email,
         )
 
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -281,9 +293,8 @@ class CustomUserViewSet(UserViewSet):
             )
 
         revoke_all_user_sessions(user)
-
-        emails.AccountLockdownEmail(request=request, context={"user": user}).send(
-            to=[user.email]
+        send_email(
+            purpose=EmailPurpose.ACCOUNT_LOCKDOWN, request=request, to=user.email
         )
 
         return Response(status=status.HTTP_200_OK)
@@ -310,7 +321,7 @@ class CustomUserViewSet(UserViewSet):
             user.deletion_scheduled_at = None
             user.save(update_fields=["is_active", "deletion_scheduled_at"])
 
-        emails.AccountDeletionCanceledEmail().send(to=[user.email])
+        send_email(purpose=EmailPurpose.ACCOUNT_DELETION_CANCELED, to=user.email)
 
         return Response(status=status.HTTP_200_OK)
 
@@ -337,8 +348,11 @@ class CustomUserViewSet(UserViewSet):
 
         revoke_all_user_sessions(user)
 
-        emails.AccountDeletionEmail(request=request, context={"user": user}).send(
-            to=[user.email]
+        send_email(
+            purpose=EmailPurpose.ACCOUNT_DELETION,
+            request=request,
+            context={"user": user},
+            to=user.email,
         )
 
         return Response(status=status.HTTP_200_OK)

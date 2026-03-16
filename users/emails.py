@@ -1,12 +1,14 @@
+from enum import Enum
+
 from django.contrib.auth.tokens import default_token_generator
+from django.http import HttpRequest
 from djoser import utils
 from djoser.email import (
     BaseDjoserEmail,
-    ConfirmationEmail,
-    PasswordResetEmail,
 )
 
 from users.models import User
+from users.services.otp import generate_and_set_otp
 
 DATETIME_FORMAT = "%B %d, %Y at %H:%M UTC"
 
@@ -53,7 +55,7 @@ class AccountActivationEmail(BaseDjoserEmail):
     template_name = "emails/account_activation.html"
 
 
-class AccountActivatedEmail(ConfirmationEmail):
+class AccountActivatedEmail(BaseDjoserEmail):
     """Sent after a user successfully activates their account."""
 
     template_name = "emails/account_activated.html"
@@ -104,7 +106,7 @@ class AccountDeletionCanceledEmail(BaseDjoserEmail):
     template_name = "emails/account_deletion_canceled.html"
 
 
-class AccountLockdownEmail(UidAndTokenMixin, BaseDjoserEmail):
+class AccountLockdownEmail(BaseDjoserEmail):
     """
     Sent after user's account has been locked down.
 
@@ -122,23 +124,12 @@ class AccountLockdownEmail(UidAndTokenMixin, BaseDjoserEmail):
         return context
 
 
-class ChangeEmailEmail(UidAndTokenMixin, BaseDjoserEmail):
+class ChangeEmailEmail(BaseDjoserEmail):
     """
     Sent to the new address when a user requests to change their account email.
-
-    Contains a confirmation link with a UID and token that the user
-    must click to activate the new email address.
     """
 
     template_name = "emails/change_email.html"
-
-    def get_context_data(self):
-        context = super().get_context_data()
-        context["confirm_email_url"] = (
-            f"confirm-email/{context['uid']}/{context['token']}"
-        )
-
-        return context
 
 
 class ChangeEmailNoticeEmail(
@@ -178,7 +169,7 @@ class EmailChangedNoticeEmail(
     template_name = "emails/email_changed_notice.html"
 
 
-class ResetPasswordEmail(PasswordResetEmail):
+class ResetPasswordEmail(BaseDjoserEmail):
     """
     Sent when a user requests a password reset.
     """
@@ -192,3 +183,33 @@ class PasswordChangedEmail(
     """Sent when the user's password has been changed."""
 
     template_name = "emails/password_changed.html"
+
+
+class EmailPurpose(Enum):
+    ACCOUNT_ACTIVATION = AccountActivationEmail
+    ACCOUNT_ACTIVATED = AccountActivatedEmail
+    ACCOUNT_DELETION = AccountDeletionEmail
+    ACCOUNT_DELETION_CANCELED = AccountDeletionCanceledEmail
+    ACCOUNT_DELETED = AccountDeletedEmail
+    ACCOUNT_LOCKDOWN = AccountLockdownEmail
+    CHANGE_EMAIL = ChangeEmailEmail
+    CHANGE_EMAIL_NOTICE = ChangeEmailNoticeEmail
+    EMAIL_CHANGED = EmailChangedEmail
+    EMAIL_CHANGED_NOTICE = EmailChangedNoticeEmail
+    RESET_PASSWORD = ResetPasswordEmail
+    PASSWORD_CHANGED = PasswordChangedEmail
+
+
+def send_email(
+    purpose: EmailPurpose, request: HttpRequest, to: str, context: dict = None
+) -> None:
+    include_otp = purpose in {
+        EmailPurpose.ACCOUNT_ACTIVATION,
+        EmailPurpose.RESET_PASSWORD,
+        EmailPurpose.CHANGE_EMAIL,
+    }
+    if include_otp:
+        context["otp"] = generate_and_set_otp(email=to)
+
+    email = purpose.value
+    email(request=request, context=context).send(to=[to])
