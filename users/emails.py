@@ -201,7 +201,7 @@ class EmailPurpose(Enum):
 
 
 def send_email(
-    purpose: EmailPurpose, request: HttpRequest, to: str, context: dict = None
+    purpose: EmailPurpose, request: HttpRequest, to: str, context: dict = {}
 ) -> None:
     """
     Send an email for the specified purpose.
