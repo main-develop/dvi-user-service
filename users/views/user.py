@@ -3,16 +3,22 @@ from django.db import transaction
 from django.utils import timezone
 from djoser import signals, utils
 from djoser.compat import settings
-from djoser.serializers import UidAndTokenSerializer
+from djoser.serializers import UidAndTokenSerializer, UserDeleteSerializer
 from djoser.views import UserViewSet
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from users import emails, serializers
+from users import emails
 from users.models import User
-from users.services.otp import OTPPurpose, generate_and_set_otp, verify_otp
+from users.serializers.user import (
+    ChangeEmailSerializer,
+    ResendVerificationEmailSerializer,
+    VerificationPurpose,
+    VerifyOtpSerializer,
+)
+from users.services.otp import generate_and_set_otp, verify_otp
 from users.utils import revoke_all_user_sessions
 
 
@@ -41,23 +47,6 @@ from users.utils import revoke_all_user_sessions
         description="Change user's password to a new one.",
         tags=["Users"],
     ),
-    activation=extend_schema(
-        summary="Confirm user email",
-        description=(
-            "Confirm the user's email address to complete the registration process. "
-            "The `uid` and `token` values must be extracted from the link sent to the "
-            "user's email address."
-        ),
-        tags=["Auth"],
-    ),
-    resend_activation=extend_schema(
-        summary="Resend confirmation email",
-        description=(
-            "Resend the confirmation email."
-            "The number of attempts is limited to 4 per hour."
-        ),
-        tags=["Auth"],
-    ),
 )
 class CustomUserViewSet(UserViewSet):
     """
@@ -67,10 +56,12 @@ class CustomUserViewSet(UserViewSet):
     """
 
     def get_serializer_class(self):
+        if self.action == "verify":
+            return VerifyOtpSerializer
+        if self.action == "resend_verification_email":
+            return ResendVerificationEmailSerializer
         if self.action == "change_email":
-            return serializers.ChangeEmailSerializer
-        if self.action == "reset_password_verify":
-            return serializers.PasswordResetVerifyOTPSerializer
+            return ChangeEmailSerializer
         if self.action in {
             "change_email_confirm",
             "lockdown_account",
@@ -82,7 +73,8 @@ class CustomUserViewSet(UserViewSet):
 
     def get_permissions(self):
         if self.action in {
-            "reset_password_verify",
+            "verify",
+            "resend_verification_email",
             "reset_password_confirm",
             "cancel_deletion",
             "lockdown_account",
@@ -97,41 +89,75 @@ class CustomUserViewSet(UserViewSet):
             sender=self.__class__, user=user, request=self.request
         )
 
-        context = {
-            "user": user,
-            "otp": generate_and_set_otp(user.email, OTPPurpose.ACCOUNT_ACTIVATION),
-        }
-
         if settings.SEND_ACTIVATION_EMAIL:
-            settings.EMAIL.activation(request=self.request, context=context).send(
-                to=[user.email]
-            )
-        elif settings.SEND_CONFIRMATION_EMAIL:
-            settings.EMAIL.confirmation(request=self.request, context=context).send(
+            context = {
+                "user": user,
+                "otp": generate_and_set_otp(user.email),
+            }
+
+            emails.ActivationEmail(request=self.request, context=context).send(
                 to=[user.email]
             )
 
+    @extend_schema(summary="Verify user's email", tags=["Auth"])
     @action(["post"], detail=False)
-    def activation(self, request, *args, **kwargs):
+    def verify(self, request, *args, **kwargs):
+        """
+        Verify user's email address to complete specific purpose.
+        If purpose of verification is password reset, return the `uid` and `token` values
+        that are needed in the confirmation step.
+        """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         user: User = verify_otp(
             serializer.validated_data["email"],
             serializer.validated_data["otp"],
-            OTPPurpose.ACCOUNT_ACTIVATION,
-        )
-        user.is_active = True
-        user.save()
-
-        signals.user_activated.send(
-            sender=self.__class__, user=user, request=self.request
         )
 
-        if settings.SEND_CONFIRMATION_EMAIL:
-            settings.EMAIL.confirmation(
-                request=self.request, context={"user": user}
-            ).send(to=[user.email])
+        if not user.is_active:
+            user.is_active = True
+            user.save()
+
+            signals.user_activated.send(
+                sender=self.__class__, user=user, request=self.request
+            )
+
+            if settings.SEND_CONFIRMATION_EMAIL:
+                emails.CustomConfirmationEmail(
+                    request=self.request, context={"user": user}
+                ).send(to=[user.email])
+
+        if serializer.validated_data["purpose"] == VerificationPurpose.RESET_PASSWORD:
+            uid = utils.encode_uid(user.pk)
+            token = default_token_generator.make_token(user)
+
+            return Response(
+                data={"uid": uid, "token": token}, status=status.HTTP_200_OK
+            )
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @extend_schema(summary="Resend verification email", tags=["Auth"])
+    @action(["post"], detail=False)
+    def resend_verification_email(self, request, *args, **kwargs):
+        """
+        Resend a verification email with 6-digit OTP.
+
+        Rate-limited to 4 attempts per hour.
+        """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user: User = serializer.get_user(
+            is_active=serializer.validated_data["purpose"]
+            != VerificationPurpose.ACTIVATION
+        )
+        if user:
+            context = {"otp": generate_and_set_otp(user.email)}
+            emails.ActivationEmail(request=self.request, context=context).send(
+                to=[user.email]
+            )
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -203,34 +229,11 @@ class CustomUserViewSet(UserViewSet):
                 request=request,
                 context={
                     "user": user,
-                    "otp": generate_and_set_otp(user.email, OTPPurpose.PASSWORD_RESET),
+                    "otp": generate_and_set_otp(user.email),
                 },
             ).send(to=[user.email])
 
         return Response(status=status.HTTP_204_NO_CONTENT)
-
-    @extend_schema(summary="Verify OTP for password reset", tags=["Users"])
-    @action(["post"], detail=False)
-    def reset_password_verify(self, request, *args, **kwargs):
-        """
-        Verify OTP for password reset purpose.
-
-        On success returns the `uid` and `token` values that must be used in the
-        password reset confirm step.
-        """
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        user: User = verify_otp(
-            serializer.validated_data["email"],
-            serializer.validated_data["otp"],
-            OTPPurpose.PASSWORD_RESET,
-        )
-
-        uid = utils.encode_uid(user.pk)
-        token = default_token_generator.make_token(user)
-
-        return Response({"uid": uid, "token": token}, status=status.HTTP_200_OK)
 
     @extend_schema(summary="Set new password", tags=["Users"])
     @action(["post"], detail=False)
@@ -314,7 +317,7 @@ class CustomUserViewSet(UserViewSet):
     @extend_schema(
         summary="Delete user's account",
         tags=["Users"],
-        request=serializers.CustomUserDeleteSerializer,
+        request=UserDeleteSerializer,
     )
     def destroy(self, request, *args, **kwargs):
         """

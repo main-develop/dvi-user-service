@@ -3,8 +3,8 @@ from drf_spectacular.utils import extend_schema
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 
-from users import serializers
 from users.models import User
+from users.serializers.auth import LoginSerializer, LogoutSerializer
 
 
 class LoginView(generics.GenericAPIView):
@@ -14,7 +14,7 @@ class LoginView(generics.GenericAPIView):
     Upon successful authentication, the user is logged in and a session is created.
     """
 
-    serializer_class = serializers.LoginSerializer
+    serializer_class = LoginSerializer
     permission_classes = []
 
     @extend_schema(summary="Log user in", tags=["Auth"])
@@ -70,7 +70,7 @@ class LoginView(generics.GenericAPIView):
 class LogoutView(generics.GenericAPIView):
     """Log out the currently authenticated user by terminating their session."""
 
-    serializer_class = serializers.EmptySerializer
+    serializer_class = LogoutSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     @extend_schema(summary="Log user out", tags=["Auth"])

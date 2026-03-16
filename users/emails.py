@@ -1,7 +1,6 @@
 from django.contrib.auth.tokens import default_token_generator
 from djoser import utils
 from djoser.email import (
-    ActivationEmail,
     BaseDjoserEmail,
     ConfirmationEmail,
     PasswordChangedConfirmationEmail,
@@ -25,7 +24,7 @@ class AccountSecurityLockdownMixin:
     def get_context_data(self):
         context = super().get_context_data()
         context["account_security_lockdown_url"] = (
-            f"account-security/lockdown/{context["uid"]}/{context["token"]}"
+            f"account-security/lockdown/{context['uid']}/{context['token']}"
         )
 
         return context
@@ -49,7 +48,7 @@ class UidAndTokenMixin:
         return context
 
 
-class CustomActivationEmail(ActivationEmail):
+class ActivationEmail(BaseDjoserEmail):
     """Sent when a user needs to activate their account."""
 
     template_name = "emails/email_verification.html"
@@ -76,7 +75,7 @@ class AccountDeletionAlertEmail(
     def get_context_data(self):
         context = super().get_context_data()
         context["cancel_deletion_url"] = (
-            f"cancel-deletion/{context["uid"]}/{context["token"]}"
+            f"cancel-deletion/{context['uid']}/{context['token']}"
         )
 
         deletion_scheduled_at = context["user"].deletion_scheduled_at
@@ -118,7 +117,7 @@ class AccountLockdownNoticeEmail(UidAndTokenMixin, BaseDjoserEmail):
     def get_context_data(self):
         context = super().get_context_data()
         context["password_reset_url"] = (
-            f"password/reset/{context["uid"]}/{context["token"]}"
+            f"password/reset/{context['uid']}/{context['token']}"
         )
 
         return context
@@ -165,7 +164,7 @@ class ChangeEmailConfirmEmail(UidAndTokenMixin, BaseDjoserEmail):
     def get_context_data(self):
         context = super().get_context_data()
         context["confirm_email_url"] = (
-            f"confirm-email/{context["uid"]}/{context["token"]}"
+            f"confirm-email/{context['uid']}/{context['token']}"
         )
 
         return context
