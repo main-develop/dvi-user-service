@@ -48,6 +48,14 @@ class UserFunctionsMixin:
 
 
 class UserCreatePasswordRetypeSerializer(UserCreateSerializer):
+    """
+    Serializer for user creation/registration that requires password
+    confirmation.
+
+    Extends :class:`UserCreateSerializer` by dynamically adding a
+    `confirm_password` field.
+    """
+
     default_error_messages = DEFAULT_ERROR_MESSAGES
 
     def __init__(self, *args, **kwargs):
@@ -67,10 +75,14 @@ class UserCreatePasswordRetypeSerializer(UserCreateSerializer):
 
 
 class ResendVerificationEmailSerializer(SendEmailResetSerializer, UserFunctionsMixin):
+    """Serializer for requesting a resend of a verification email."""
+
     purpose = serializers.ChoiceField(choices=VerificationPurpose, required=True)
 
 
 class VerifyOtpSerializer(serializers.Serializer):
+    """Serializer for verifying a OTP code."""
+
     email = serializers.EmailField(required=True)
     otp = serializers.CharField(max_length=6, min_length=6, required=True)
     purpose = serializers.ChoiceField(choices=VerificationPurpose, required=True)
@@ -117,6 +129,14 @@ class SetUsernameSerializer(UsernameSerializer):
 
 
 class PasswordRetypeSerializer(PasswordSerializer):
+    """
+    Serializer for password reset/change flows that requires the user
+    to retype the new password for confirmation.
+
+    Extends :class:`PasswordSerializer` by adding a required `confirm_password`
+    field.
+    """
+
     default_error_messages = DEFAULT_ERROR_MESSAGES
     confirm_password = serializers.CharField(
         required=True, style={"input_type": "password"}
@@ -131,7 +151,9 @@ class PasswordRetypeSerializer(PasswordSerializer):
 
 
 class SetPasswordRetypeSerializer(PasswordRetypeSerializer, CurrentPasswordSerializer):
-    pass
+    """
+    Serializer for setting a new password.
+    """
 
 
 class PasswordResetSerializer(SendEmailResetSerializer, UserFunctionsMixin):
@@ -142,6 +164,6 @@ class PasswordResetSerializer(SendEmailResetSerializer, UserFunctionsMixin):
 
 class PasswordResetConfirmSerializer(UidAndTokenSerializer, PasswordRetypeSerializer):
     """
-    Serializer for setting new password using `uid` and `token` from the OTP
+    Serializer for resetting password using `uid` and `token` from the OTP
     verification step.
     """

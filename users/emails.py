@@ -19,7 +19,7 @@ class AccountSecurityLockdownMixin:
 
     This mixin is intended for use in emails related to sensitive account actions.
     Generates a URL pointing to a lockdown endpoint that requires both the
-    uid and a token to proceed.
+    `uid` and `token` to proceed.
     """
 
     def get_context_data(self):
@@ -33,7 +33,7 @@ class AccountSecurityLockdownMixin:
 
 class UidAndTokenMixin:
     """
-    Add uid and token to email context data.
+    Add `uid` and `token` to email context data.
 
     Assumes user is available in the context from the base class.
     """
@@ -203,6 +203,13 @@ class EmailPurpose(Enum):
 def send_email(
     purpose: EmailPurpose, request: HttpRequest, to: str, context: dict = None
 ) -> None:
+    """
+    Send an email for the specified purpose.
+
+    If the purpose requires an OTP (ACCOUNT_ACTIVATION, RESET_PASSWORD,
+    or CHANGE_EMAIL), generates one via `generate_and_set_otp` and adds
+    it to the context.
+    """
     include_otp = purpose in {
         EmailPurpose.ACCOUNT_ACTIVATION,
         EmailPurpose.RESET_PASSWORD,

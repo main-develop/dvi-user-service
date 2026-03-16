@@ -27,7 +27,7 @@ from users.utils import revoke_all_user_sessions
         summary="Register a new user",
         description=(
             "Register a new user in the system. A unique `email`, `username`, "
-            "and matching `password` and `confirm_password` are required for "
+            "and matching `password` with `confirm_password` are required for "
             "successful registration."
         ),
         tags=["Auth"],
@@ -101,6 +101,7 @@ class CustomUserViewSet(UserViewSet):
     def verify(self, request, *args, **kwargs):
         """
         Verify user's email address to complete specific purpose.
+
         If purpose of verification is password reset, return the `uid` and `token`
         values that are needed in the confirmation step.
         """
@@ -167,9 +168,9 @@ class CustomUserViewSet(UserViewSet):
     @action(["post"], detail=False)
     def change_email(self, request, *args, **kwargs):
         """
-        Allow an authenticated user to request a change of their email address.
+        Request a change of user's email address to a new one.
 
-        A confirmation link is sent to the new email address. Rate-limited to
+        A verification OTP is sent to the new email address. Rate-limited to
         4 attempts per hour.
         """
         serializer = self.get_serializer(data=request.data)
@@ -198,8 +199,7 @@ class CustomUserViewSet(UserViewSet):
     @action(["post"], detail=False)
     def change_email_confirm(self, request, *args, **kwargs):
         """
-        Confirm the new email address using the uid and token sent in the
-        confirmation email, finalising the email change and notifying the user.
+        Confirm the new email address using 6-digit OTP.
         """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -230,7 +230,7 @@ class CustomUserViewSet(UserViewSet):
     @action(["post"], detail=False)
     def reset_password(self, request, *args, **kwargs):
         """
-        Send a 6-digit OTP to the specified email for password reset purpose.
+        Request a password reset for an existing user.
 
         Rate-limited to 4 attempts per hour.
         """
@@ -304,8 +304,6 @@ class CustomUserViewSet(UserViewSet):
     def cancel_deletion(self, request, *args, **kwargs):
         """
         Cancel a scheduled account deletion.
-
-        If no deletion is scheduled, returns success anyway (idempotent).
         """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
