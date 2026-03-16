@@ -10,10 +10,10 @@ DJOSER = {
     "PASSWORD_CHANGED_EMAIL_CONFIRMATION": True,
     "PASSWORD_RESET_CONFIRM_URL": "#/password-reset/{uid}/{token}",
     "EMAIL": {
-        "activation": "users.emails.ActivationEmail",
-        "confirmation": "users.emails.CustomConfirmationEmail",
+        "activation": "users.emails.AccountActivationEmail",
+        "confirmation": "users.emails.AccountActivatedEmail",
         "password_reset": "users.emails.PasswordResetEmail",
-        "password_changed_confirmation": "users.emails.CustomPasswordChangedConfirmationEmail",
+        "password_changed_confirmation": "users.emails.PasswordChangedEmail",
     },
     "SERIALIZERS": {
         "set_username": "users.serializers.user.SetUsernameSerializer",

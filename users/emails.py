@@ -3,7 +3,6 @@ from djoser import utils
 from djoser.email import (
     BaseDjoserEmail,
     ConfirmationEmail,
-    PasswordChangedConfirmationEmail,
     PasswordResetEmail,
 )
 
@@ -48,19 +47,19 @@ class UidAndTokenMixin:
         return context
 
 
-class ActivationEmail(BaseDjoserEmail):
+class AccountActivationEmail(BaseDjoserEmail):
     """Sent when a user needs to activate their account."""
 
-    template_name = "emails/email_verification.html"
+    template_name = "emails/account_activation.html"
 
 
-class CustomConfirmationEmail(ConfirmationEmail):
+class AccountActivatedEmail(ConfirmationEmail):
     """Sent after a user successfully activates their account."""
 
-    template_name = "emails/email_verified.html"
+    template_name = "emails/account_activated.html"
 
 
-class AccountDeletionAlertEmail(
+class AccountDeletionEmail(
     AccountSecurityLockdownMixin, UidAndTokenMixin, BaseDjoserEmail
 ):
     """
@@ -87,10 +86,10 @@ class AccountDeletionAlertEmail(
         return context
 
 
-class AccountDeletionSuccessEmail(BaseDjoserEmail):
+class AccountDeletedEmail(BaseDjoserEmail):
     """Sent after user's account has been successfully deleted."""
 
-    template_name = "emails/account_deletion_success.html"
+    template_name = "emails/account_deleted.html"
 
     def get_context_data(self):
         context = super().get_context_data()
@@ -105,14 +104,14 @@ class AccountDeletionCanceledEmail(BaseDjoserEmail):
     template_name = "emails/account_deletion_canceled.html"
 
 
-class AccountLockdownNoticeEmail(UidAndTokenMixin, BaseDjoserEmail):
+class AccountLockdownEmail(UidAndTokenMixin, BaseDjoserEmail):
     """
     Sent after user's account has been locked down.
 
     Contains a password reset link if user haven't reset their password yet.
     """
 
-    template_name = "emails/account_security_lockdown_notice.html"
+    template_name = "emails/account_lockdown.html"
 
     def get_context_data(self):
         context = super().get_context_data()
@@ -123,17 +122,23 @@ class AccountLockdownNoticeEmail(UidAndTokenMixin, BaseDjoserEmail):
         return context
 
 
-class ChangeEmailAlertEmail(
-    AccountSecurityLockdownMixin, UidAndTokenMixin, BaseDjoserEmail
-):
+class ChangeEmailEmail(UidAndTokenMixin, BaseDjoserEmail):
     """
-    Sent to the old email address after the account's email was changed.
+    Sent to the new address when a user requests to change their account email.
 
-    Gives the legitimate owner an immediate way to revoke sessions,
-    reset password, etc., to protect their account in case of a breach.
+    Contains a confirmation link with a UID and token that the user
+    must click to activate the new email address.
     """
 
-    template_name = "emails/change_email_alert.html"
+    template_name = "emails/change_email.html"
+
+    def get_context_data(self):
+        context = super().get_context_data()
+        context["confirm_email_url"] = (
+            f"confirm-email/{context['uid']}/{context['token']}"
+        )
+
+        return context
 
 
 class ChangeEmailNoticeEmail(
@@ -151,53 +156,39 @@ class ChangeEmailNoticeEmail(
     template_name = "emails/change_email_notice.html"
 
 
-class ChangeEmailConfirmEmail(UidAndTokenMixin, BaseDjoserEmail):
-    """
-    Sent to the new address when a user requests to change their account email.
-
-    Contains a confirmation link with a UID and token that the user
-    must click to activate the new email address.
-    """
-
-    template_name = "emails/change_email_confirm.html"
-
-    def get_context_data(self):
-        context = super().get_context_data()
-        context["confirm_email_url"] = (
-            f"confirm-email/{context['uid']}/{context['token']}"
-        )
-
-        return context
-
-
-class ChangeEmailSuccessEmail(BaseDjoserEmail):
+class EmailChangedEmail(BaseDjoserEmail):
     """
     Sent to the user's new email address after they have
     successfully changed their account email.
     """
 
-    template_name = "emails/change_email_success.html"
+    template_name = "emails/email_changed.html"
 
 
-class CustomPasswordChangedConfirmationEmail(PasswordChangedConfirmationEmail):
-    """Sent after the account password has been changed."""
+class EmailChangedNoticeEmail(
+    AccountSecurityLockdownMixin, UidAndTokenMixin, BaseDjoserEmail
+):
+    """
+    Sent to the old email address after the account's email was changed.
 
-    template_name = "emails/password_changed.html"
+    Gives the legitimate owner an immediate way to revoke sessions,
+    reset password, etc., to protect their account in case of a breach.
+    """
+
+    template_name = "emails/email_changed_notice.html"
 
 
-class ResetPasswordOTPConfirmEmail(PasswordResetEmail):
+class ResetPasswordEmail(PasswordResetEmail):
     """
     Sent when a user requests a password reset.
-
-    Contains a password reset link.
     """
 
-    template_name = "emails/reset_password_otp_confirm.html"
+    template_name = "emails/reset_password.html"
 
 
-class ResetPasswordSuccessEmail(
-    AccountSecurityLockdownMixin, UidAndTokenMixin, PasswordChangedConfirmationEmail
+class PasswordChangedEmail(
+    AccountSecurityLockdownMixin, UidAndTokenMixin, BaseDjoserEmail
 ):
-    """Sent when the user's password has been successfully changed."""
+    """Sent when the user's password has been changed."""
 
     template_name = "emails/password_changed.html"

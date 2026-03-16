@@ -95,7 +95,7 @@ class CustomUserViewSet(UserViewSet):
                 "otp": generate_and_set_otp(user.email),
             }
 
-            emails.ActivationEmail(request=self.request, context=context).send(
+            emails.AccountActivationEmail(request=self.request, context=context).send(
                 to=[user.email]
             )
 
@@ -124,7 +124,7 @@ class CustomUserViewSet(UserViewSet):
             )
 
             if settings.SEND_CONFIRMATION_EMAIL:
-                emails.CustomConfirmationEmail(
+                emails.AccountActivatedEmail(
                     request=self.request, context={"user": user}
                 ).send(to=[user.email])
 
@@ -155,7 +155,7 @@ class CustomUserViewSet(UserViewSet):
         )
         if user:
             context = {"otp": generate_and_set_otp(user.email)}
-            emails.ActivationEmail(request=self.request, context=context).send(
+            emails.AccountActivationEmail(request=self.request, context=context).send(
                 to=[user.email]
             )
 
@@ -180,7 +180,7 @@ class CustomUserViewSet(UserViewSet):
         emails.ChangeEmailNoticeEmail(request=request, context={"user": user}).send(
             to=[user.email]
         )
-        emails.ChangeEmailConfirmEmail(request=request, context={"user": user}).send(
+        emails.ChangeEmailEmail(request=request, context={"user": user}).send(
             to=[user.pending_email]
         )
 
@@ -203,10 +203,10 @@ class CustomUserViewSet(UserViewSet):
             user.pending_email = None
             user.save()
 
-        emails.ChangeEmailAlertEmail(request=request, context={"user": user}).send(
+        emails.EmailChangedNoticeEmail(request=request, context={"user": user}).send(
             to=[old_email]
         )
-        emails.ChangeEmailSuccessEmail(request=request, context={"user": user}).send(
+        emails.EmailChangedEmail(request=request, context={"user": user}).send(
             to=[user.email]
         )
 
@@ -225,7 +225,7 @@ class CustomUserViewSet(UserViewSet):
 
         user: User = serializer.get_user()
         if user:
-            emails.ResetPasswordOTPConfirmEmail(
+            emails.ResetPasswordEmail(
                 request=request,
                 context={
                     "user": user,
@@ -252,7 +252,7 @@ class CustomUserViewSet(UserViewSet):
 
         revoke_all_user_sessions(user)
 
-        emails.ResetPasswordSuccessEmail(request=request, context={"user": user}).send(
+        emails.PasswordChangedEmail(request=request, context={"user": user}).send(
             to=[user.email]
         )
 
@@ -282,7 +282,7 @@ class CustomUserViewSet(UserViewSet):
 
         revoke_all_user_sessions(user)
 
-        emails.AccountLockdownNoticeEmail(request=request, context={"user": user}).send(
+        emails.AccountLockdownEmail(request=request, context={"user": user}).send(
             to=[user.email]
         )
 
@@ -337,7 +337,7 @@ class CustomUserViewSet(UserViewSet):
 
         revoke_all_user_sessions(user)
 
-        emails.AccountDeletionAlertEmail(request=request, context={"user": user}).send(
+        emails.AccountDeletionEmail(request=request, context={"user": user}).send(
             to=[user.email]
         )
 
