@@ -49,7 +49,7 @@ class LoginView(generics.GenericAPIView):
                     "errors": [
                         {
                             "code": "bad_request",
-                            "detail": "Invalid credentials.",
+                            "detail": "Invalid credentials",
                             "attr": None,
                         },
                     ],
