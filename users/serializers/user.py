@@ -18,7 +18,7 @@ User = get_user_model()
 
 
 class VerificationPurpose(StrEnum):
-    ACTIVATION = "activation"
+    ACCOUNT_ACTIVATION = "account_activation"
     RESET_PASSWORD = "reset_password"
 
 

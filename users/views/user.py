@@ -152,7 +152,7 @@ class CustomUserViewSet(UserViewSet):
         purpose = serializer.validated_data["purpose"]
 
         user: User = serializer.get_user(
-            is_active=purpose != VerificationPurpose.ACTIVATION
+            is_active=purpose != VerificationPurpose.ACCOUNT_ACTIVATION
         )
         if user:
             if purpose == VerificationPurpose.RESET_PASSWORD:
