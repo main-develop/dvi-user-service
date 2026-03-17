@@ -12,8 +12,7 @@ Deletion scheduled for:
 {{ account_deletion_datetime }}
 
 If this was you, no action is needed.
-If you want to keep your account, click on the link below:
-{{ protocol }}://{{ domain }}/{{ cancel_deletion_url|safe }}
+If you want to cancel deletion, simply sign in to your account.
 
 If you did not request this, this may indicate someone else is trying to delete your account. Please immediately 
 secure your account by clicking the following link 
@@ -37,121 +36,103 @@ Sincerely, The DVI Team
       <tr>
         <td align="center">
           <table
-            width="600"
+            width="100%"
+            max-width="480"
             cellspacing="0"
             cellpadding="0"
-            style="
-              background-color: #ffffff;
-              border: 1px solid #ddd;
-              border-radius: 8px;
-              box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-              color: #444444;
-              padding: 40px;
-              text-align: left;
-              font-family: 'Roboto', sans-serif;
-              font-weight: 500;
-              font-style: normal;
-            "
+            style="color: #888; padding: 60px 30px; text-align: left"
           >
             <tr>
               <td>
-                <hr
+                <h2
                   style="
-                    border: 0;
-                    border-top: 1px solid #ddd;
-                    margin-top: 20px;
+                    margin: 0;
+                    text-align: center;
+                    font-weight: 700;
+                    color: #008700;
                   "
-                />
-                <h2 style="text-align: center; color: #333333">
-                  Account Deletion Alert
+                >
+                  ACCOUNT DELETION
                 </h2>
 
-                <p style="margin-top: 35px">Dear user,</p>
+                <p style="margin: 30px 0 10px; font-size: 15px">Dear user,</p>
 
-                <p style="margin-top: 0">
+                <p style="margin: 15px 0 10px; font-size: 15px">
                   We received a request to permanently delete your
                   <strong>DVI</strong> account and all associated data. Your
                   account has been deactivated and will be deleted
                   <strong>in 24 hours</strong>.
                 </p>
 
-                <p>
+                <p style="font-size: 15px">
                   Deletion scheduled for:<br />
                   <strong>{{ account_deletion_datetime }}</strong>
                 </p>
 
-                <p>
-                  If this was you, no action is needed. If you want to keep your
-                  account, click on the button below:
-                </p>
-                <p style="margin: 35px 0 35px 0; text-align: center">
-                  <a
-                    href="{{ protocol }}://{{ domain }}/{{ cancel_deletion_url|safe }}"
-                    style="
-                      background-color: #007bff;
-                      color: #ffffff;
-                      padding: 10px 24px;
-                      text-decoration: none;
-                      border-radius: 6px;
-                      font-weight: bold;
-                    "
-                    >Cancel Deletion</a
-                  >
+                <p style="font-size: 15px">
+                  If this was you, no action is needed. If you want to cancel
+                  deletion, simply sign in to your account.
                 </p>
 
                 <div
                   style="
-                    border-radius: 8px;
+                    border-radius: 4px;
                     border: 1px solid #e9363631;
-                    background: #e6171715;
+                    background: #c4121224;
                     padding: 14px;
                   "
                 >
-                  <p style="margin-top: 0">
+                  <p style="margin-top: 0; font-size: 15px">
                     <strong>If you did not request this</strong>, this may
                     indicate someone else is trying to delete your account.
                   </p>
-                  <p style="margin-top: 0">
+
+                  <p style="margin-top: 0; font-size: 15px">
                     Please immediately secure your account by clicking the
                     button below (account deletion will be cancelled
                     automatically):
                   </p>
-                  <p style="margin: 22px 0 14px 0; text-align: center">
+
+                  <div style="margin: 30px 0 14px 0; text-align: center">
                     <a
                       href="{{ protocol }}://{{ domain }}/{{ account_security_lockdown_url|safe }}"
                       style="
-                        background-color: #007bff;
+                        background-color: #1a1a1a;
                         color: #ffffff;
                         padding: 10px 24px;
                         text-decoration: none;
-                        border-radius: 6px;
+                        border-radius: 4px;
+                        letter-spacing: -0.025em;
+                        font-size: 14px;
                         font-weight: bold;
                       "
-                      >Secure Account</a
+                      >SECURE ACCOUNT</a
                     >
-                  </p>
+                  </div>
                 </div>
 
-                <p style="margin-top: 35px">Sincerely,<br />The DVI Team</p>
+                <p style="margin: 45px 0 0; font-size: 15px">
+                  Sincerely,<br />The DVI Team
+                </p>
+
                 <hr
                   style="
                     border: 0;
                     border-top: 1px solid #ddd;
-                    margin-top: 20px;
+                    margin: 20px 0 20px;
                   "
                 />
-              </td>
-            </tr>
-            <tr>
-              <td
-                style="
-                  padding-top: 20px;
-                  text-align: center;
-                  color: #666666;
-                  font-size: 13px;
-                "
-              >
-                &copy; 2025 DVI. All rights reserved.
+
+                <p
+                  style="
+                    margin: 0;
+                    text-align: center;
+                    font-size: 13px;
+                    color: #aaaaaa;
+                  "
+                >
+                  &copy; 2026 DVI
+                </p>
               </td>
             </tr>
           </table>
