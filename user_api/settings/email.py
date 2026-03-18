@@ -10,16 +10,17 @@ DJOSER = {
     "PASSWORD_CHANGED_EMAIL_CONFIRMATION": True,
     "PASSWORD_RESET_CONFIRM_URL": "#/password-reset/{uid}/{token}",
     "EMAIL": {
-        "activation": "users.emails.CustomActivationEmail",
-        "confirmation": "users.emails.CustomConfirmationEmail",
+        "activation": "users.emails.AccountActivationEmail",
+        "confirmation": "users.emails.AccountActivatedEmail",
         "password_reset": "users.emails.PasswordResetEmail",
-        "password_changed_confirmation": "users.emails.CustomPasswordChangedConfirmationEmail",
+        "password_changed_confirmation": "users.emails.PasswordChangedEmail",
     },
     "SERIALIZERS": {
-        "set_username": "users.serializers.CustomSetUsernameSerializer",
-        "user_delete": "users.serializers.CustomUserDeleteSerializer",
-        "password_reset": "users.serializers.CustomSendEmailResetSerializer",
-        "user_create_password_retype": "users.serializers.CustomUserCreatePasswordRetypeSerializer",
+        "set_username": "users.serializers.user.SetUsernameSerializer",
+        "password_reset": "users.serializers.user.PasswordResetSerializer",
+        "password_reset_confirm_retype": "users.serializers.user.PasswordResetConfirmSerializer",
+        "set_password_retype": "users.serializers.user.SetPasswordRetypeSerializer",
+        "user_create_password_retype": "users.serializers.user.UserCreatePasswordRetypeSerializer",
     },
 }
 

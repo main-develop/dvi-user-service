@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
-from users.emails import AccountDeletionSuccessEmail
+from users.emails import AccountDeletedEmail
 from users.utils import revoke_all_user_sessions
 
 User = get_user_model()
@@ -33,7 +33,7 @@ class Command(BaseCommand):
         for user in users_to_delete.iterator():
             revoke_all_user_sessions(user)
 
-            AccountDeletionSuccessEmail(
+            AccountDeletedEmail(
                 context={"deletion_datetime": timezone.now()}
             ).send(to=[user.email])
 

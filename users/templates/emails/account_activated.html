@@ -1,14 +1,14 @@
 {% block subject %}
-Your DVI Account Deletion Has Been Canceled
+Welcome to DVI — Your Account is Ready! 🎉
 {% endblock subject %}
 
-{% block text_body %}
+{% block text_body%}
 Dear user,
 
-Your scheduled DVI account deletion has been successfully canceled.
-Your account is now fully reactivated.
+Your account is now active and ready to use. We're thrilled to have you on board.
 
-We're really glad you're staying with us!
+Get started right away:
+{{ protocol }}://{{ domain }}/login-url
 
 Sincerely, The DVI Team
 {% endblock text_body %}
@@ -28,11 +28,10 @@ Sincerely, The DVI Team
       <tr>
         <td align="center">
           <table
-            width="100%"
-            max-width="480"
+            width="600"
             cellspacing="0"
             cellpadding="0"
-            style="color: #888; padding: 70px 30px; text-align: left"
+            style="color: #888; padding: 90px 30px; text-align: left"
           >
             <tr>
               <td>
@@ -44,17 +43,15 @@ Sincerely, The DVI Team
                     color: #008700;
                   "
                 >
-                  ACCOUNT DELETION CANCELED
+                  WELCOME TO DVI!
                 </h2>
 
                 <p style="margin: 30px 0 10px; font-size: 15px">Dear user,</p>
 
                 <p style="margin: 15px 0 10px; font-size: 15px">
-                  Your scheduled <strong>DVI</strong> account deletion has been
-                  successfully canceled. Your account is now fully reactivated.
+                  Your account is now active and ready to use. We're thrilled to
+                  have you on board.
                 </p>
-
-                <p style="font-size: 15px">We're really glad you're staying with us!</p>
 
                 <p style="margin: 45px 0 0; font-size: 15px">
                   Sincerely,<br />The DVI Team
