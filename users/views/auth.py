@@ -74,7 +74,7 @@ class LogoutView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     @extend_schema(summary="Log user out", tags=["Auth"])
-    def get(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         """Log out by terminating the user's active session."""
         logout(request)
         return Response(status=status.HTTP_200_OK)
