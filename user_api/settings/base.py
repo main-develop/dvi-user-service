@@ -15,7 +15,7 @@ if os.path.exists(os.path.join(BASE_DIR, ".env")):
 
 DEBUG = env("DEBUG")  # SECURITY WARNING: don't run with debug turned on in production!
 SECRET_KEY = env("SECRET_KEY")
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [env("ALLOWED_HOSTS")]
 
 # Django REST framework settings
 REST_FRAMEWORK = {
@@ -87,11 +87,13 @@ AUTHENTICATION_BACKENDS = [
 
 CORS_ALLOW_CREDENTIALS = True
 CORS_ORIGIN_WHITELIST = [
+    "http://0.0.0.0:3000",
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "http://192.168.100.12:3000",
 ]
 CSRF_TRUSTED_ORIGINS = [
+    "http://0.0.0.0:3000",
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "http://192.168.100.12:3000",
