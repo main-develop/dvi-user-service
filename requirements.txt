@@ -5,5 +5,7 @@ djangorestframework==3.16.1
 djoser==2.3.3
 drf-spectacular==0.28.0
 drf_standardized_errors==0.15.0
-psycopg[binary]==3.2.12
 gunicorn==23.0.0
+hiredis==3.3.1
+psycopg[binary]==3.2.12
+redis==7.3.0

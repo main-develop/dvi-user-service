@@ -103,6 +103,15 @@ ROOT_URLCONF = "user_api.urls"
 URL_FORMAT_OVERRIDE = None  # The name of the format query parameter
 WSGI_APPLICATION = "user_api.wsgi.application"
 
+# Cache
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": env("REDIS_LOCATION"),
+        "KEY_PREFIX": "otp",
+    }
+}
+
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 DATABASES = {
