@@ -71,7 +71,7 @@ class AccountDeletionEmail(
     for additional protection.
     """
 
-    template_name = "emails/account_deletion_alert.html"
+    template_name = "emails/account_deletion.html"
 
     def get_context_data(self):
         context = super().get_context_data()

@@ -3,7 +3,6 @@ from enum import StrEnum
 from django.contrib.auth import get_user_model
 from djoser.compat import settings
 from djoser.serializers import (
-    CurrentPasswordSerializer,
     PasswordSerializer,
     SendEmailResetSerializer,
     UidAndTokenSerializer,
@@ -12,7 +11,10 @@ from djoser.serializers import (
 )
 from rest_framework import serializers
 
-DEFAULT_ERROR_MESSAGES = {"password_mismatch": "Passwords do not match"}
+DEFAULT_ERROR_MESSAGES = {
+    "password_mismatch": "Passwords do not match",
+    "invalid_password": "Invalid password",
+}
 
 User = get_user_model()
 
@@ -72,6 +74,21 @@ class UserCreatePasswordRetypeSerializer(UserCreateSerializer):
             return attrs
         else:
             self.fail("password_mismatch")
+
+
+class CurrentPasswordSerializer(serializers.Serializer):
+    """Serializer for current password validation."""
+
+    current_password = serializers.CharField(style={"input_type": "password"})
+
+    default_error_messages = DEFAULT_ERROR_MESSAGES
+
+    def validate_current_password(self, value):
+        is_password_valid = self.context["request"].user.check_password(value)
+        if is_password_valid:
+            return value
+        else:
+            self.fail("invalid_password")
 
 
 class ResendVerificationEmailSerializer(SendEmailResetSerializer, UserFunctionsMixin):
@@ -151,15 +168,11 @@ class PasswordRetypeSerializer(PasswordSerializer):
 
 
 class SetPasswordRetypeSerializer(PasswordRetypeSerializer, CurrentPasswordSerializer):
-    """
-    Serializer for setting a new password.
-    """
+    """Serializer for setting a new password."""
 
 
 class PasswordResetSerializer(SendEmailResetSerializer, UserFunctionsMixin):
-    """
-    Serializer for requesting password reset.
-    """
+    """Serializer for requesting password reset."""
 
 
 class PasswordResetConfirmSerializer(UidAndTokenSerializer, PasswordRetypeSerializer):
@@ -167,3 +180,7 @@ class PasswordResetConfirmSerializer(UidAndTokenSerializer, PasswordRetypeSerial
     Serializer for resetting password using `uid` and `token` from the OTP
     verification step.
     """
+
+
+class UserDeleteSerializer(CurrentPasswordSerializer):
+    """Serializer for requesting account deletion."""

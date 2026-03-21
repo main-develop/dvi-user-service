@@ -3,6 +3,7 @@ from drf_spectacular.utils import extend_schema
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 
+from users.emails import EmailPurpose, send_email
 from users.models import User
 from users.serializers.auth import LoginSerializer, LogoutSerializer
 
@@ -12,6 +13,8 @@ class LoginView(generics.GenericAPIView):
     Authenticate a user using either their username or email.
 
     Upon successful authentication, the user is logged in and a session is created.
+    If user has previously requested account deletion, logging in again will cancel
+    that request.
     """
 
     serializer_class = LoginSerializer
@@ -40,8 +43,8 @@ class LoginView(generics.GenericAPIView):
             if is_email
             else {"username": username_or_email}
         )
-        user: User = authenticate(request=request, **login_method, password=password)
 
+        user: User = authenticate(request=request, **login_method, password=password)
         if user is None:
             return Response(
                 data={
@@ -55,6 +58,15 @@ class LoginView(generics.GenericAPIView):
                     ],
                 },
                 status=status.HTTP_400_BAD_REQUEST,
+            )
+        if user.deletion_scheduled_at:
+            user.deletion_scheduled_at = None
+            user.save()
+
+            send_email(
+                purpose=EmailPurpose.ACCOUNT_DELETION_CANCELED,
+                request=request,
+                to=user.email,
             )
 
         login(request=request, user=user)

@@ -65,7 +65,6 @@ class CustomUserViewSet(UserViewSet):
         if self.action in {
             "change_email_confirm",
             "lockdown_account",
-            "cancel_deletion",
         }:
             return UidAndTokenSerializer
 
@@ -76,7 +75,6 @@ class CustomUserViewSet(UserViewSet):
             "verify",
             "resend_verification_email",
             "reset_password_confirm",
-            "cancel_deletion",
             "lockdown_account",
         }:
             self.permission_classes = [permissions.AllowAny]
@@ -190,7 +188,7 @@ class CustomUserViewSet(UserViewSet):
             purpose=EmailPurpose.CHANGE_EMAIL,
             request=request,
             context={"user": user},
-            to=user.pending_email
+            to=user.pending_email,
         )
 
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -299,30 +297,6 @@ class CustomUserViewSet(UserViewSet):
 
         return Response(status=status.HTTP_200_OK)
 
-    @extend_schema(summary="Cancel scheduled account deletion", tags=["Users"])
-    @action(["post"], detail=False)
-    def cancel_deletion(self, request, *args, **kwargs):
-        """
-        Cancel a scheduled account deletion.
-        """
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        user: User = serializer.user
-        if user.deletion_scheduled_at is None:
-            return Response(
-                data={"detail": "No deletion scheduled."}, status=status.HTTP_200_OK
-            )
-
-        with transaction.atomic():
-            user.is_active = True
-            user.deletion_scheduled_at = None
-            user.save(update_fields=["is_active", "deletion_scheduled_at"])
-
-        send_email(purpose=EmailPurpose.ACCOUNT_DELETION_CANCELED, to=user.email)
-
-        return Response(status=status.HTTP_200_OK)
-
     @extend_schema(
         summary="Delete user's account",
         tags=["Users"],
@@ -332,17 +306,14 @@ class CustomUserViewSet(UserViewSet):
         """
         Schedule permanent account deletion in 24 hours.
 
-        User can cancel it via ``/users/account-security/lockdown/``
-        endpoint if they suspect takeover.
+        User can cancel it by logging in to their account.
         """
         user: User = request.user
         serializer = self.get_serializer(user, data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        with transaction.atomic():
-            user.is_active = False
-            user.deletion_scheduled_at = timezone.now() + timezone.timedelta(hours=24)
-            user.save(update_fields=["is_active", "deletion_scheduled_at"])
+        user.deletion_scheduled_at = timezone.now() + timezone.timedelta(hours=24)
+        user.save(update_fields=["deletion_scheduled_at"])
 
         revoke_all_user_sessions(user)
 

@@ -21,6 +21,7 @@ DJOSER = {
         "password_reset_confirm_retype": "users.serializers.user.PasswordResetConfirmSerializer",
         "set_password_retype": "users.serializers.user.SetPasswordRetypeSerializer",
         "user_create_password_retype": "users.serializers.user.UserCreatePasswordRetypeSerializer",
+        "user_delete": "users.serializers.user.UserDeleteSerializer",
     },
 }
 
