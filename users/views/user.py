@@ -125,6 +125,25 @@ class CustomUserViewSet(UserViewSet):
                     request=self.request,
                     to=user.email,
                 )
+        if user.pending_email:
+            with transaction.atomic():
+                old_email = user.email
+                user.email = user.pending_email
+                user.pending_email = None
+                user.save()
+
+            send_email(
+                purpose=EmailPurpose.EMAIL_CHANGED_NOTICE,
+                request=request,
+                context={"user": user},
+                to=old_email,
+            )
+            send_email(
+                purpose=EmailPurpose.EMAIL_CHANGED,
+                request=request,
+                context={"user": user},
+                to=user.email,
+            )
 
         if serializer.validated_data["purpose"] == VerificationPurpose.RESET_PASSWORD:
             uid = utils.encode_uid(user.pk)
@@ -153,12 +172,29 @@ class CustomUserViewSet(UserViewSet):
             is_active=purpose != VerificationPurpose.ACCOUNT_ACTIVATION
         )
         if user:
+            context = {}
+
             if purpose == VerificationPurpose.RESET_PASSWORD:
                 email_purpose = EmailPurpose.RESET_PASSWORD
+            elif purpose == VerificationPurpose.CHANGE_EMAIL:
+                email_purpose = EmailPurpose.CHANGE_EMAIL_NOTICE
+                context = {"user": user}
+
+                send_email(
+                    purpose=EmailPurpose.CHANGE_EMAIL,
+                    request=request,
+                    context=context,
+                    to=user.pending_email,
+                )
             else:
                 email_purpose = EmailPurpose.ACCOUNT_ACTIVATION
 
-            send_email(purpose=email_purpose, request=self.request, to=user.email)
+            send_email(
+                purpose=email_purpose,
+                request=self.request,
+                context=context,
+                to=user.email,
+            )
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 

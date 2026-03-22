@@ -21,6 +21,7 @@ User = get_user_model()
 
 class VerificationPurpose(StrEnum):
     ACCOUNT_ACTIVATION = "account_activation"
+    CHANGE_EMAIL = "change_email"
     RESET_PASSWORD = "reset_password"
 
 
@@ -114,9 +115,6 @@ class ChangeEmailSerializer(CurrentPasswordSerializer):
     """
 
     new_email = serializers.EmailField(required=True)
-    confirm_password = serializers.CharField(
-        required=True, style={"input_type": "password"}
-    )
 
     def validate(self, attrs):
         attrs = super().validate(attrs)
@@ -126,14 +124,11 @@ class ChangeEmailSerializer(CurrentPasswordSerializer):
             raise serializers.ValidationError(
                 {
                     "new_email": (
-                        "The current email address cannot be used as the new one."
+                        "The current email address cannot be used as the new one"
                     )
                 }
             )
-        if attrs["current_password"] == attrs["confirm_password"]:
-            return attrs
-        else:
-            self.fail("password_mismatch")
+        return attrs
 
 
 class SetUsernameSerializer(UsernameSerializer):

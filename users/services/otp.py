@@ -3,6 +3,7 @@ import string
 
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
+from django.db.models import Q
 from rest_framework.exceptions import ValidationError
 
 User = get_user_model()
@@ -34,7 +35,7 @@ def verify_otp(email: str, otp: str) -> User:
         raise ValidationError({"otp": "This code is invalid"})
 
     try:
-        user = User.objects.get(email=email)
+        user = User.objects.get(Q(email=email) | Q(pending_email=email))
     except User.DoesNotExist as exc:
         raise ValidationError({"email": "User not found"}) from exc
 
