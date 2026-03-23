@@ -12,7 +12,7 @@ if os.path.exists(os.path.join(BASE_DIR, ".env")):
 
 SECRET_KEY = env("SECRET_KEY")
 CORS_ALLOW_CREDENTIALS = True
-WSGI_APPLICATION = "user_api.wsgi.application"
+WSGI_APPLICATION = "dvi_user_service.wsgi.application"
 
 # Django REST framework settings
 REST_FRAMEWORK = {
@@ -138,5 +138,5 @@ STATIC_URL = "static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
 # Urls
-ROOT_URLCONF = "user_api.urls"
+ROOT_URLCONF = "dvi_user_service.urls"
 URL_FORMAT_OVERRIDE = None  # The name of the `format` query parameter

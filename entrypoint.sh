@@ -8,4 +8,4 @@ echo "Applying database migrations..."
 python manage.py migrate
 
 echo "Starting Gunicorn..."
-exec gunicorn user_api.wsgi:application --bind 0.0.0.0:8000 --workers 3
+exec gunicorn dvi_user_service.wsgi:application --bind 0.0.0.0:8000 --workers 3
