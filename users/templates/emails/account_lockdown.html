@@ -36,93 +36,85 @@ Sincerely, The DVI Team
       <tr>
         <td align="center">
           <table
-            width="600"
+            width="100%"
+            max-width="480"
             cellspacing="0"
             cellpadding="0"
-            style="
-              background-color: #ffffff;
-              border: 1px solid #ddd;
-              border-radius: 8px;
-              box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-              color: #444444;
-              padding: 40px;
-              text-align: left;
-              font-family: 'Roboto', sans-serif;
-              font-weight: 500;
-              font-style: normal;
-            "
+            style="color: #888; padding: 60px 30px; text-align: left"
           >
             <tr>
               <td>
-                <hr
-                  style="
-                    border: 0;
-                    border-top: 1px solid #ddd;
-                    margin-top: 20px;
+                <h2 style="
+                    margin: 0;
+                    text-align: center;
+                    font-weight: 700;
+                    color: #008700;
                   "
-                />
-                <h2 style="text-align: center; color: #333333">
-                  Account Lockdown Notice
+                >
+                  ACCOUNT LOCKDOWN
                 </h2>
 
-                <p style="margin-top: 35px">Dear user,</p>
+                <p style="margin: 30px 0 10px; font-size: 15px">Dear user,</p>
 
-                <p style="margin-top: 0">
+                <p style="margin: 15px 0 10px; font-size: 15px">
                   Your <strong>DVI</strong> account has just been locked
                   down at your request for security reasons.
                 </p>
 
-                <p style="margin-top: 0">
+                <p style="margin-top: 0; font-size: 15px">
                     What this means:
-                    <ul>
-                      <li>Your previous password has been invalidated;</li>
-                      <li>Pending email address change (if any) has been canceled;</li>
-                      <li>All devices have been logged out;</li>
-                      <li>No one can access your account until you set a new password.</li>
+                    <ul style="font-size: 15px">
+                      <li style="margin: 10px 0 0">Your previous password has been invalidated;</li>
+                      <li style="margin: 10px 0 0">Pending email address change (if any) has been canceled;</li>
+                      <li style="margin: 10px 0 0">All devices have been logged out;</li>
+                      <li style="margin: 10px 0 0">No one can access your account until you set a new password.</li>
                     </ul>
                   </p>
 
-                <p>
+                <p style="font-size: 15px">
                   If you haven't reset your password yet, click on the button
                   below to regain access:
                 </p>
-                <p style="margin: 35px 0 35px 0; text-align: center">
+
+                <p style="margin: 30px auto; text-align: center">
                   <a
                     href="{{ protocol }}://{{ domain }}/{{ password_reset_url|safe }}"
                     style="
-                      background-color: #007bff;
+                      background-color: #1a1a1a;
                       color: #ffffff;
                       padding: 10px 24px;
                       text-decoration: none;
-                      border-radius: 6px;
+                      border-radius: 4px;
+                      letter-spacing: -0.025em;
+                      font-size: 14px;
                       font-weight: bold;
                     "
-                    >Reset Password</a
+                    >RESET PASSWORD</a
                   >
                 </p>
 
-                <p>Your account is now safe.</p>
+                <p style="margin: 30px 0 0; font-size: 15px">Your account is now safe.</p>
 
-                <p style="margin-top: 35px">Sincerely,<br />The DVI Team</p>
+                <p style="margin: 45px 0 0; font-size: 15px">Sincerely,<br />The DVI Team</p>
+
                 <hr
                   style="
                     border: 0;
                     border-top: 1px solid #ddd;
-                    margin-top: 20px;
+                    margin: 20px 0 20px;
                   "
                 />
-              </td>
-            </tr>
-            <tr>
-              <td
-                style="
-                  padding-top: 20px;
-                  text-align: center;
-                  color: #666666;
-                  font-size: 13px;
-                "
-              >
-                &copy; 2025 DVI. All rights reserved.
+
+                <p
+                  style="
+                    margin: 0;
+                    text-align: center;
+                    font-size: 13px;
+                    color: #aaaaaa;
+                  "
+                >
+                  &copy; 2026 DVI
+                </p>
               </td>
             </tr>
           </table>

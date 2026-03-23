@@ -15,7 +15,7 @@ if os.path.exists(os.path.join(BASE_DIR, ".env")):
 
 DEBUG = env("DEBUG")  # SECURITY WARNING: don't run with debug turned on in production!
 SECRET_KEY = env("SECRET_KEY")
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [env("ALLOWED_HOSTS")]
 
 # Django REST framework settings
 REST_FRAMEWORK = {
@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "corsheaders",
     "rest_framework",
     "djoser",
     "drf_spectacular",
@@ -57,6 +58,7 @@ INSTALLED_APPS = [
     "users",
 ]
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -83,9 +85,32 @@ AUTHENTICATION_BACKENDS = [
     "users.overrides.backends.CustomModelBackend",
 ]
 
+CORS_ALLOW_CREDENTIALS = True
+CORS_ORIGIN_WHITELIST = [
+    "http://0.0.0.0:3000",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://192.168.100.12:3000",
+]
+CSRF_TRUSTED_ORIGINS = [
+    "http://0.0.0.0:3000",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://192.168.100.12:3000",
+]
+
 ROOT_URLCONF = "user_api.urls"
 URL_FORMAT_OVERRIDE = None  # The name of the format query parameter
 WSGI_APPLICATION = "user_api.wsgi.application"
+
+# Cache
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": env("REDIS_LOCATION"),
+        "KEY_PREFIX": "otp",
+    }
+}
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
@@ -117,6 +142,9 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+    },
+    {
+        "NAME": "users.validators.MaximumLengthValidator",
     },
     {
         "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
