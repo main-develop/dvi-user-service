@@ -10,7 +10,7 @@ with open(
 SPECTACULAR_SETTINGS = {
     "TITLE": "DVI User API Specification",
     "DESCRIPTION": api_description,
-    "VERSION": None,
+    "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
     "SERVE_PERMISSIONS": ["rest_framework.permissions.IsAuthenticatedOrReadOnly"],
     "AUTHENTICATION_WHITELIST": [],

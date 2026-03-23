@@ -4,18 +4,15 @@ from pathlib import Path
 import environ
 from django.db.backends.postgresql.psycopg_any import IsolationLevel
 
-# Build paths inside the project like this: BASE_DIR / "subdir"
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-# Load environment variables
 env = environ.Env()
-# When running without Docker
 if os.path.exists(os.path.join(BASE_DIR, ".env")):
     environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 
-DEBUG = env("DEBUG")  # SECURITY WARNING: don't run with debug turned on in production!
 SECRET_KEY = env("SECRET_KEY")
-ALLOWED_HOSTS = [env("ALLOWED_HOSTS")]
+CORS_ALLOW_CREDENTIALS = True
+WSGI_APPLICATION = "dvi_user_service.wsgi.application"
 
 # Django REST framework settings
 REST_FRAMEWORK = {
@@ -85,33 +82,6 @@ AUTHENTICATION_BACKENDS = [
     "users.overrides.backends.CustomModelBackend",
 ]
 
-CORS_ALLOW_CREDENTIALS = True
-CORS_ORIGIN_WHITELIST = [
-    "http://0.0.0.0:3000",
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://192.168.100.12:3000",
-]
-CSRF_TRUSTED_ORIGINS = [
-    "http://0.0.0.0:3000",
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://192.168.100.12:3000",
-]
-
-ROOT_URLCONF = "user_api.urls"
-URL_FORMAT_OVERRIDE = None  # The name of the format query parameter
-WSGI_APPLICATION = "user_api.wsgi.application"
-
-# Cache
-CACHES = {
-    "default": {
-        "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": env("REDIS_LOCATION"),
-        "KEY_PREFIX": "otp",
-    }
-}
-
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 DATABASES = {
@@ -128,8 +98,8 @@ DATABASES = {
         },
     }
 }
-
 AUTH_USER_MODEL = "users.User"
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
@@ -166,3 +136,7 @@ USE_TZ = True
 STATIC_URL = "static/"
 # Directory where static files will be collected for production
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
+
+# Urls
+ROOT_URLCONF = "dvi_user_service.urls"
+URL_FORMAT_OVERRIDE = None  # The name of the `format` query parameter
