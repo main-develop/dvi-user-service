@@ -4,12 +4,17 @@ from .email import *
 
 DEBUG = True
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "0.0.0.0", "192.168.100.12"]
+ALLOWED_HOSTS = env.list(
+    "ALLOWED_HOSTS", default=["localhost", "127.0.0.1", "0.0.0.0", "192.168.100.12"]
+)
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://0.0.0.0:3000",
-    "http://192.168.100.12:3000",
-]
+CORS_ALLOWED_ORIGINS = env.list(
+    "CORS_ALLOWED_ORIGINS",
+    default=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://0.0.0.0:3000",
+        "http://192.168.100.12:3000",
+    ],
+)
 CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS[:]
