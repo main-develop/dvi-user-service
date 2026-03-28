@@ -95,7 +95,9 @@ class AccountDeletedEmail(BaseDjoserEmail):
 
     def get_context_data(self):
         context = super().get_context_data()
-        context["deletion_datetime"].strftime(DATETIME_FORMAT)
+        context["deletion_datetime"] = context["deletion_datetime"].strftime(
+            DATETIME_FORMAT
+        )
 
         return context
 
@@ -189,7 +191,6 @@ class EmailPurpose(Enum):
     ACCOUNT_ACTIVATION = AccountActivationEmail
     ACCOUNT_ACTIVATED = AccountActivatedEmail
     ACCOUNT_DELETION = AccountDeletionEmail
-    ACCOUNT_DELETION_CANCELED = AccountDeletionCanceledEmail
     ACCOUNT_DELETED = AccountDeletedEmail
     ACCOUNT_LOCKDOWN = AccountLockdownEmail
     CHANGE_EMAIL = ChangeEmailEmail
@@ -201,7 +202,7 @@ class EmailPurpose(Enum):
 
 
 def send_email(
-    purpose: EmailPurpose, request: HttpRequest, to: str, context: dict = {}
+    purpose: EmailPurpose, to: str, request: HttpRequest = None, context: dict = {}
 ) -> None:
     """
     Send an email for the specified purpose.
