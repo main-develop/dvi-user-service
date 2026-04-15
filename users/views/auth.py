@@ -63,6 +63,7 @@ class LoginView(generics.GenericAPIView):
             user.deletion_scheduled_at = None
             user.save()
 
+            # TODO: Add deletion canceled template
             send_email(
                 purpose=EmailPurpose.ACCOUNT_DELETION_CANCELED,
                 request=request,

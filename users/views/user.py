@@ -229,6 +229,7 @@ class CustomUserViewSet(UserViewSet):
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    # TODO: Remove, not used anymore
     @extend_schema(summary="Confirm email change", tags=["Users"])
     @action(["post"], detail=False)
     def change_email_confirm(self, request, *args, **kwargs):
@@ -327,6 +328,7 @@ class CustomUserViewSet(UserViewSet):
             )
 
         revoke_all_user_sessions(user)
+        # TODO: Add `uid` and `token` to the context
         send_email(
             purpose=EmailPurpose.ACCOUNT_LOCKDOWN, request=request, to=user.email
         )
