@@ -75,7 +75,7 @@ jobs:
         run: python manage.py makemigrations --check --dry-run
 
       - name: Run tests with coverage
-        run: pytest -v --cov=users --cov-fail-under=80
+        run: pytest -v --cov=users --cov-branch --cov-fail-under=80
 
       - name: Prepare coverage data for combining
         run: mv .coverage .coverage.${{ matrix.os }}.${{ matrix.python-version }}
@@ -84,7 +84,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-${{ matrix.os }}-${{ matrix.python-version }}
-          path: .coverage
+          path: .coverage.*
+          include-hidden-files: true
 
   coverage-combine:
     needs: ["test"]
@@ -102,7 +103,7 @@ jobs:
       - name: Combine & report
         run: |
           pip install coverage
-          coverage combine .coverage.ubuntu-latest.*
+          coverage combine .coverage*
           coverage report --fail-under=80
           coverage html
 
