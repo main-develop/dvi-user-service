@@ -4,12 +4,19 @@ import pytest
 
 from users.emails import EmailPurpose, send_email
 
+OTP_BASED_PURPOSES = {
+    EmailPurpose.ACCOUNT_ACTIVATION,
+    EmailPurpose.CHANGE_EMAIL,
+    EmailPurpose.RESET_PASSWORD,
+}
 
+
+@pytest.mark.parametrize("purpose", OTP_BASED_PURPOSES)
 @pytest.mark.django_db
-def test_send_email_includes_otp_for_account_activation(user):
+def test_send_email_calls_generate_otp_for_otp_based_purposes(user, purpose):
     with patch("users.emails.generate_and_set_otp") as mock_otp:
         mock_otp.return_value = "ABC123"
 
-        send_email(EmailPurpose.ACCOUNT_ACTIVATION, to=user.email)
+        send_email(purpose, to=user.email)
 
         mock_otp.assert_called_once_with(email=user.email)

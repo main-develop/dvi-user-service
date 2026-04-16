@@ -10,14 +10,23 @@ from users.utils import revoke_all_user_sessions
 
 User = get_user_model()
 
-PAST = timezone.now() - timezone.timedelta(hours=25)
-FUTURE = timezone.now() + timezone.timedelta(days=1)
+
+@pytest.fixture
+def scheduled_at_past():
+    return timezone.now() - timezone.timedelta(hours=25)
+
+
+@pytest.fixture
+def scheduled_at_future():
+    return timezone.now() + timezone.timedelta(days=1)
 
 
 @pytest.mark.django_db
-def test_delete_scheduled_users_deletes_due_users():
-    due = UserFactory(deletion_scheduled_at=PAST)
-    future = UserFactory(deletion_scheduled_at=FUTURE)
+def test_delete_scheduled_users_deletes_due_users(
+    scheduled_at_past, scheduled_at_future
+):
+    due = UserFactory(deletion_scheduled_at=scheduled_at_past)
+    future = UserFactory(deletion_scheduled_at=scheduled_at_future)
     active = UserFactory(deletion_scheduled_at=None)
 
     call_command("delete_scheduled_users", dry_run=False)
@@ -28,8 +37,8 @@ def test_delete_scheduled_users_deletes_due_users():
 
 
 @pytest.mark.django_db
-def test_delete_scheduled_users_sends_email():
-    due = UserFactory(deletion_scheduled_at=PAST)
+def test_delete_scheduled_users_sends_email(scheduled_at_past):
+    due = UserFactory(deletion_scheduled_at=scheduled_at_past)
 
     with patch(
         "users.management.commands.delete_scheduled_users.send_email"
@@ -42,8 +51,8 @@ def test_delete_scheduled_users_sends_email():
 
 
 @pytest.mark.django_db
-def test_delete_scheduled_users_dry_run_does_not_delete():
-    due = UserFactory(deletion_scheduled_at=PAST)
+def test_delete_scheduled_users_dry_run_does_not_delete(scheduled_at_past):
+    due = UserFactory(deletion_scheduled_at=scheduled_at_past)
 
     call_command("delete_scheduled_users", dry_run=True)
 
@@ -57,8 +66,8 @@ def test_delete_scheduled_users_no_due_users():
 
 
 @pytest.mark.django_db
-def test_delete_scheduled_users_revokes_sessions():
-    due = UserFactory(deletion_scheduled_at=PAST)
+def test_delete_scheduled_users_revokes_sessions(scheduled_at_past):
+    due = UserFactory(deletion_scheduled_at=scheduled_at_past)
     captured_pks = []
 
     def capture_user(user):
@@ -74,14 +83,14 @@ def test_delete_scheduled_users_revokes_sessions():
 
 
 @pytest.mark.django_db
-def test_delete_scheduled_users_continues_on_single_failure():
-    failing = UserFactory(deletion_scheduled_at=PAST)
-    succeeding = UserFactory(deletion_scheduled_at=PAST)
+def test_delete_scheduled_users_continues_on_single_failure(scheduled_at_past):
+    failing = UserFactory(deletion_scheduled_at=scheduled_at_past)
+    succeeding = UserFactory(deletion_scheduled_at=scheduled_at_past)
 
     def revoke_side_effect(user):
         if user.pk == failing.pk:
             raise Exception("Simulated failure")
-        revoke_all_user_sessions(user)
+        return revoke_all_user_sessions(user)
 
     with patch(
         "users.management.commands.delete_scheduled_users.revoke_all_user_sessions",

@@ -21,7 +21,7 @@ def test_revoke_all_user_sessions(user):
 
 
 @pytest.mark.django_db
-def test_revoke_all_user_sessions_decode_error(user, caplog):
+def test_revoke_all_user_sessions_force_delete_on_error(user, caplog):
     bad_session = MagicMock(spec=Session)
     bad_session.get_decoded.side_effect = Exception("Corrupt session")
 
@@ -33,4 +33,4 @@ def test_revoke_all_user_sessions_decode_error(user, caplog):
 
     assert len(caplog.records) == 1
     assert "Failed to decode/delete session" in caplog.records[0].message
-    bad_session.delete.assert_not_called()
+    bad_session.delete.assert_called_once()

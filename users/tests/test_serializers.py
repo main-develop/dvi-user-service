@@ -88,9 +88,8 @@ def test_change_email_serializer_invalid_password(user):
     request = factory.post("/")
     request.user = user
 
-    serializer = ChangeEmailSerializer(
-        data={"current_password": "invalid"}, context={"request": request}
-    )
+    data = {"current_password": "invalid", "new_email": "new_test@example.com"}
+    serializer = ChangeEmailSerializer(data=data, context={"request": request})
 
     assert not serializer.is_valid()
     assert serializer.errors["current_password"][0].code == "invalid_password"

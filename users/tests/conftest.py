@@ -14,11 +14,6 @@ def user(db):
 
 
 @pytest.fixture
-def transactional_user(transactional_db):
-    return UserFactory()
-
-
-@pytest.fixture
 def authenticated_client(api_client, user):
     api_client.force_login(user)
     return api_client

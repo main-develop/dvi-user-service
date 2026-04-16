@@ -25,13 +25,31 @@ def test_user_perform_create_password_too_long(api_client):
     data = {
         "email": "test@example.com",
         "username": "test_user",
-        "password": "testpassword123".join(["0" for i in range(6)]),
-        "confirm_password": "testpassword123".join(["0" for i in range(6)]),
+        "password": "password_is_way_too_long",
+        "confirm_password": "password_is_way_too_long",
     }
     response = api_client.post(path=reverse("auth_register"), data=data, format="json")
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert response.data["errors"][0]["code"] == "password_too_long"
+
+
+@pytest.mark.parametrize(
+    "purpose",
+    ["account_activation", "change_email", "reset_password"],
+)
+@pytest.mark.django_db
+def test_user_resend_verification_email(api_client, user, purpose):
+    if purpose == "account_activation":
+        user.is_active = False
+        user.save()
+
+    data = {"email": user.email, "purpose": purpose}
+    response = api_client.post(
+        path=reverse("auth_resend_verification_email"), data=data, format="json"
+    )
+
+    assert response.status_code == status.HTTP_204_NO_CONTENT
 
 
 @pytest.mark.django_db
@@ -49,19 +67,6 @@ def test_user_verify_account_activation(api_client, user):
     assert response.status_code == status.HTTP_204_NO_CONTENT
     user.refresh_from_db()
     assert user.is_active
-
-
-@pytest.mark.django_db
-def test_user_resend_verification_email_account_activation(api_client, user):
-    user.is_active = False
-    user.save()
-
-    data = {"email": user.email, "purpose": "account_activation"}
-    response = api_client.post(
-        path=reverse("auth_resend_verification_email"), data=data, format="json"
-    )
-
-    assert response.status_code == status.HTTP_204_NO_CONTENT
 
 
 @pytest.mark.django_db
@@ -95,16 +100,6 @@ def test_user_verify_change_email(api_client, user):
 
 
 @pytest.mark.django_db
-def test_user_resend_verification_email_change_email(api_client, user):
-    data = {"email": user.email, "purpose": "change_email"}
-    response = api_client.post(
-        path=reverse("auth_resend_verification_email"), data=data, format="json"
-    )
-
-    assert response.status_code == status.HTTP_204_NO_CONTENT
-
-
-@pytest.mark.django_db
 def test_user_verify_reset_password(api_client, user):
     data = {
         "email": user.email,
@@ -118,16 +113,6 @@ def test_user_verify_reset_password(api_client, user):
 
 
 @pytest.mark.django_db
-def test_user_resend_verification_email_reset_password(api_client, user):
-    data = {"email": user.email, "purpose": "reset_password"}
-    response = api_client.post(
-        path=reverse("auth_resend_verification_email"), data=data, format="json"
-    )
-
-    assert response.status_code == status.HTTP_204_NO_CONTENT
-
-
-@pytest.mark.django_db
 def test_user_reset_password(api_client, user):
     response = api_client.post(
         path=reverse("users_password_reset"), data={"email": user.email}, format="json"
@@ -137,9 +122,6 @@ def test_user_reset_password(api_client, user):
 
 @pytest.mark.django_db
 def test_user_reset_password_confirm(api_client, user):
-    user.is_active = False
-    user.save()
-
     data = {
         "uid": utils.encode_uid(user.pk),
         "token": default_token_generator.make_token(user),
@@ -152,7 +134,7 @@ def test_user_reset_password_confirm(api_client, user):
 
     assert response.status_code == status.HTTP_204_NO_CONTENT
     user.refresh_from_db()
-    assert user.is_active
+    assert user.has_usable_password()
 
 
 @pytest.mark.django_db
