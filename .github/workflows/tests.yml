@@ -102,7 +102,7 @@ jobs:
       - name: Combine & report
         run: |
           pip install coverage
-          coverage combine .coverage*
+          coverage combine .coverage.ubuntu-latest.*
           coverage report --fail-under=80
           coverage html
 
