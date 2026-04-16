@@ -226,7 +226,6 @@ class CustomUserViewSet(UserViewSet):
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-
     @extend_schema(summary="Request password reset", tags=["Users"])
     @action(["post"], detail=False)
     def reset_password(self, request, *args, **kwargs):
@@ -294,9 +293,14 @@ class CustomUserViewSet(UserViewSet):
             )
 
         revoke_all_user_sessions(user)
-        # TODO: Add `uid` and `token` to the context
+
+        uid = utils.encode_uid(user.pk)
+        token = default_token_generator.make_token(user)
         send_email(
-            purpose=EmailPurpose.ACCOUNT_LOCKDOWN, request=request, to=user.email
+            purpose=EmailPurpose.ACCOUNT_LOCKDOWN,
+            request=request,
+            context={"uid": uid, "token": token},
+            to=user.email,
         )
 
         return Response(status=status.HTTP_200_OK)
