@@ -1,7 +1,11 @@
+import logging
+
 from django.contrib.sessions.models import Session
 from django.utils import timezone
 
 from users.models import User
+
+logger = logging.getLogger(__name__)
 
 
 def revoke_all_user_sessions(user: User):
@@ -11,5 +15,5 @@ def revoke_all_user_sessions(user: User):
             if str(user.pk) == session.get_decoded().get("_auth_user_id"):
                 session.delete()
         except Exception:
-            print("Failed to decode/delete session during lockdown.")
+            logger.exception("Failed to decode/delete session for user %s", user.pk)
             continue

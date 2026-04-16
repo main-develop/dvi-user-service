@@ -1,3 +1,6 @@
+import logging
+from unittest.mock import MagicMock, patch
+
 import pytest
 from django.contrib.sessions.backends.db import SessionStore
 from django.contrib.sessions.models import Session
@@ -15,3 +18,19 @@ def test_revoke_all_user_sessions(user):
     revoke_all_user_sessions(user)
 
     assert not Session.objects.filter(session_key=session_key).exists()
+
+
+@pytest.mark.django_db
+def test_revoke_all_user_sessions_decode_error(user, caplog):
+    bad_session = MagicMock(spec=Session)
+    bad_session.get_decoded.side_effect = Exception("Corrupt session")
+
+    with patch("users.utils.Session.objects.filter") as mock_filter:
+        mock_filter.return_value = [bad_session]
+
+        with caplog.at_level(logging.ERROR, logger="users.utils"):
+            revoke_all_user_sessions(user)
+
+    assert len(caplog.records) == 1
+    assert "Failed to decode/delete session" in caplog.records[0].message
+    bad_session.delete.assert_not_called()
