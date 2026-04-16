@@ -192,6 +192,7 @@ class EmailPurpose(Enum):
     ACCOUNT_ACTIVATED = AccountActivatedEmail
     ACCOUNT_DELETION = AccountDeletionEmail
     ACCOUNT_DELETED = AccountDeletedEmail
+    ACCOUNT_DELETION_CANCELED = AccountDeletionCanceledEmail
     ACCOUNT_LOCKDOWN = AccountLockdownEmail
     CHANGE_EMAIL = ChangeEmailEmail
     CHANGE_EMAIL_NOTICE = ChangeEmailNoticeEmail
