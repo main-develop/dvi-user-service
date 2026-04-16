@@ -155,8 +155,10 @@ class PasswordRetypeSerializer(PasswordSerializer):
     )
 
     def validate(self, attrs):
+        self.fields.pop("confirm_password", None)
+        confirm_password = attrs.pop("confirm_password")
         attrs = super().validate(attrs)
-        if attrs["new_password"] == attrs["confirm_password"]:
+        if attrs["new_password"] == confirm_password:
             return attrs
         else:
             self.fail("password_mismatch")

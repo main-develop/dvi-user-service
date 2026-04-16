@@ -48,7 +48,6 @@ def test_set_password_retype_serializer_valid(user):
     serializer = SetPasswordRetypeSerializer(data=data, context={"request": request})
 
     assert serializer.is_valid()
-    # TODO: Remove confirm_password field after validation
     assert "confirm_password" not in serializer.validated_data
 
 
