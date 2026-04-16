@@ -255,10 +255,8 @@ class CustomUserViewSet(UserViewSet):
         serializer.is_valid(raise_exception=True)
 
         user: User = serializer.user
-        with transaction.atomic():
-            user.set_password(serializer.validated_data["new_password"])
-            user.is_active = True
-            user.save(update_fields=["password", "is_active"])
+        user.set_password(serializer.validated_data["new_password"])
+        user.save(update_fields=["password"])
 
         revoke_all_user_sessions(user)
         send_email(
