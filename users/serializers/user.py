@@ -92,7 +92,7 @@ class CurrentPasswordSerializer(serializers.Serializer):
             self.fail("invalid_password")
 
 
-class ResendVerificationEmailSerializer(SendEmailResetSerializer, UserFunctionsMixin):
+class ResendVerificationEmailSerializer(UserFunctionsMixin, SendEmailResetSerializer):
     """Serializer for requesting a resend of a verification email."""
 
     purpose = serializers.ChoiceField(choices=VerificationPurpose, required=True)
@@ -168,7 +168,7 @@ class SetPasswordRetypeSerializer(PasswordRetypeSerializer, CurrentPasswordSeria
     """Serializer for setting a new password."""
 
 
-class PasswordResetSerializer(SendEmailResetSerializer, UserFunctionsMixin):
+class PasswordResetSerializer(UserFunctionsMixin, SendEmailResetSerializer):
     """Serializer for requesting password reset."""
 
 
