@@ -203,7 +203,10 @@ class EmailPurpose(Enum):
 
 
 def send_email(
-    purpose: EmailPurpose, to: str, request: HttpRequest = None, context: dict = {}
+    purpose: EmailPurpose,
+    to: str,
+    request: HttpRequest = None,
+    context: dict | None = None,
 ) -> None:
     """
     Send an email for the specified purpose.
@@ -212,6 +215,9 @@ def send_email(
     or CHANGE_EMAIL), generates one via `generate_and_set_otp` and adds
     it to the context.
     """
+    if context is None:
+        context = {}
+
     include_otp = purpose in {
         EmailPurpose.ACCOUNT_ACTIVATION,
         EmailPurpose.RESET_PASSWORD,
