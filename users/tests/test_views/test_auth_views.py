@@ -4,15 +4,17 @@ from django.utils import timezone
 from rest_framework import status
 
 
+@pytest.mark.parametrize("condition", [True, False])
 @pytest.mark.django_db
-def test_login_success(api_client, user):
-    user.deletion_scheduled_at = timezone.now() + timezone.timedelta(hours=1)
-    user.save()
+def test_login_success(api_client, user, condition):
+    if condition:
+        user.deletion_scheduled_at = timezone.now() + timezone.timedelta(hours=1)
+        user.save()
 
     data = {
         "username_or_email": user.email,
         "password": "testpassword123",
-        "remember_me": False,
+        "remember_me": condition,
     }
     response = api_client.post(path=reverse("auth_login"), data=data, format="json")
 
