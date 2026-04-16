@@ -13,9 +13,9 @@ DATABASES = {
 }
 CACHES = {
     "default": {
-        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-        # "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        # "LOCATION": "redis://localhost:6379/0",
+        # "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": "redis://localhost:6379/0",
     }
 }
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
