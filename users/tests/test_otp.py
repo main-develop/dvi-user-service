@@ -42,9 +42,9 @@ def test_verify_otp_invalid_otp(user):
 
 @pytest.mark.django_db
 def test_verify_otp_user_does_not_exist(user):
-    otp = generate_and_set_otp("non-existent@gmail.com")
+    otp = generate_and_set_otp("non-existent@example.com")
 
     with pytest.raises(ValidationError) as exc:
-        verify_otp("non-existent@gmail.com", otp)
+        verify_otp("non-existent@example.com", otp)
 
     assert "email" in exc.value.detail

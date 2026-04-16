@@ -1,4 +1,5 @@
 from .base import *
+from .email import DJOSER
 
 DATABASES = {
     "default": {

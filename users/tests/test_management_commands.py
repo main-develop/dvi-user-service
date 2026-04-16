@@ -6,6 +6,8 @@ from django.core.management import call_command
 from django.utils import timezone
 from factories import UserFactory
 
+from users.utils import revoke_all_user_sessions
+
 User = get_user_model()
 
 PAST = timezone.now() - timezone.timedelta(hours=25)
@@ -69,3 +71,23 @@ def test_delete_scheduled_users_revokes_sessions():
         call_command("delete_scheduled_users", dry_run=False)
 
     assert captured_pks == [due.pk]
+
+
+@pytest.mark.django_db
+def test_delete_scheduled_users_continues_on_single_failure():
+    failing = UserFactory(deletion_scheduled_at=PAST)
+    succeeding = UserFactory(deletion_scheduled_at=PAST)
+
+    def revoke_side_effect(user):
+        if user.pk == failing.pk:
+            raise Exception("Simulated failure")
+        revoke_all_user_sessions(user)
+
+    with patch(
+        "users.management.commands.delete_scheduled_users.revoke_all_user_sessions",
+        side_effect=revoke_side_effect,
+    ):
+        call_command("delete_scheduled_users", dry_run=False)
+
+    assert User.objects.filter(pk=failing.pk).exists()
+    assert not User.objects.filter(pk=succeeding.pk).exists()
