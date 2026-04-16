@@ -15,5 +15,10 @@ def revoke_all_user_sessions(user: User):
             if str(user.pk) == session.get_decoded().get("_auth_user_id"):
                 session.delete()
         except Exception:
-            logger.exception("Failed to decode/delete session for user %s", user.pk)
+            logger.exception(
+                "Failed to decode/delete session for user %s."
+                "Attempting force delete...",
+                user.pk,
+            )
+            session.delete()
             continue
