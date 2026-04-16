@@ -46,7 +46,7 @@ class UserFunctionsMixin:
         if (
             settings.PASSWORD_RESET_SHOW_EMAIL_NOT_FOUND
             or settings.USERNAME_RESET_SHOW_EMAIL_NOT_FOUND
-        ):
+        ): # pragma: no cover
             self.fail("email_not_found")
 
 

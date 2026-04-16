@@ -5,3 +5,9 @@ omit =
     swagger.py
     */migrations/*
     */tests/*
+
+[report]
+exclude_also =
+    async def aauthenticate
+    def get_help_text
+    except User.DoesNotExist:
