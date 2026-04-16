@@ -62,10 +62,7 @@ class CustomUserViewSet(UserViewSet):
             return ResendVerificationEmailSerializer
         if self.action == "change_email":
             return ChangeEmailSerializer
-        if self.action in {
-            "change_email_confirm",
-            "lockdown_account",
-        }:
+        if self.action == "lockdown_account":
             return UidAndTokenSerializer
 
         return super().get_serializer_class()
@@ -229,37 +226,6 @@ class CustomUserViewSet(UserViewSet):
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    # TODO: Remove, not used anymore
-    @extend_schema(summary="Confirm email change", tags=["Users"])
-    @action(["post"], detail=False)
-    def change_email_confirm(self, request, *args, **kwargs):
-        """
-        Confirm the new email address using 6-digit OTP.
-        """
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        user: User = verify_otp(serializer.user.email)
-        with transaction.atomic():
-            old_email = user.email
-            user.email = user.pending_email
-            user.pending_email = None
-            user.save()
-
-        send_email(
-            purpose=EmailPurpose.EMAIL_CHANGED_NOTICE,
-            request=request,
-            context={"user": user},
-            to=old_email,
-        )
-        send_email(
-            purpose=EmailPurpose.EMAIL_CHANGED,
-            request=request,
-            context={"user": user},
-            to=user.email,
-        )
-
-        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @extend_schema(summary="Request password reset", tags=["Users"])
     @action(["post"], detail=False)
