@@ -16,9 +16,8 @@ def revoke_all_user_sessions(user: User):
                 session.delete()
         except Exception:
             logger.exception(
-                "Failed to decode/delete session for user %s."
-                "Attempting force delete...",
+                "Failed to decode session %s for user %s, skipping.",
+                session.session_key,
                 user.pk,
             )
-            session.delete()
             continue
