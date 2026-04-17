@@ -51,7 +51,7 @@ class LoginView(generics.GenericAPIView):
                     "type": "client_error",
                     "errors": [
                         {
-                            "code": "bad_request",
+                            "code": "invalid_credentials",
                             "detail": "Invalid credentials",
                             "attr": None,
                         },

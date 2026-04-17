@@ -1,0 +1,14 @@
+[run]
+omit =
+    __init__.py
+    openapi.py
+    swagger.py
+    */migrations/*
+    */tests/*
+
+[report]
+exclude_also =
+    async def aauthenticate
+    def get_help_text
+    except User.DoesNotExist:
+    username = kwargs\.get\(UserModel\.USERNAME_FIELD\)
