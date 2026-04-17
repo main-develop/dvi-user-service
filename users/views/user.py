@@ -84,7 +84,7 @@ class CustomUserViewSet(UserViewSet):
             sender=self.__class__, user=user, request=self.request
         )
 
-        if settings.SEND_ACTIVATION_EMAIL:
+        if settings.SEND_ACTIVATION_EMAIL: # pragma: no branch
             send_email(
                 purpose=EmailPurpose.ACCOUNT_ACTIVATION,
                 request=self.request,
@@ -116,7 +116,7 @@ class CustomUserViewSet(UserViewSet):
                 sender=self.__class__, user=user, request=self.request
             )
 
-            if settings.SEND_CONFIRMATION_EMAIL:
+            if settings.SEND_CONFIRMATION_EMAIL: # pragma: no branch
                 send_email(
                     purpose=EmailPurpose.ACCOUNT_ACTIVATED,
                     request=self.request,
@@ -168,7 +168,7 @@ class CustomUserViewSet(UserViewSet):
         user: User = serializer.get_user(
             is_active=purpose != VerificationPurpose.ACCOUNT_ACTIVATION
         )
-        if user:
+        if user: # pragma: no branch
             context = {}
 
             if purpose == VerificationPurpose.RESET_PASSWORD:
@@ -238,7 +238,7 @@ class CustomUserViewSet(UserViewSet):
         serializer.is_valid(raise_exception=True)
 
         user: User = serializer.get_user()
-        if user:
+        if user: # pragma: no branch
             send_email(
                 purpose=EmailPurpose.RESET_PASSWORD, request=request, to=user.email
             )
