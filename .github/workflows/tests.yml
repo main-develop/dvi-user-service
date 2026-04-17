@@ -107,6 +107,24 @@ jobs:
           coverage report --fail-under=80
           coverage html
 
+      - name: Extract coverage percentage
+        id: cov
+        run: |
+          TOTAL=$(coverage report | tail -1 | awk '{print $NF}')
+          echo "total=$TOTAL" >> $GITHUB_OUTPUT
+
+      - name: Update coverage Gist
+        uses: schneegans/dynamic-badges-action@v1.7.0
+        with:
+          auth: ${{ secrets.GIST_TOKEN }}
+          gistID: ef41d8165e52e674ad2fca6e6ef06da9
+          filename: coverage.json
+          label: Coverage
+          message: ${{ steps.cov.outputs.total }}
+          valColorRange: ${{ steps.cov.outputs.total }}
+          maxColorRange: 100
+          minColorRange: 0
+
       - name: Upload HTML report via smokeshow
         run: |
           pip install smokeshow
