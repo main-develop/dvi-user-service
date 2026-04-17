@@ -1,6 +1,7 @@
 from unittest.mock import patch
 
 import pytest
+from django.core import mail
 
 from users.emails import EmailPurpose, send_email
 
@@ -20,3 +21,10 @@ def test_send_email_calls_generate_otp_for_otp_based_purposes(user, purpose):
         send_email(purpose, to=user.email)
 
         mock_otp.assert_called_once_with(email=user.email)
+
+
+def test_send_email_no_user():
+    send_email(
+        EmailPurpose.EMAIL_CHANGED_NOTICE, context={"uid": "", "token": ""}, to=""
+    )
+    assert len(mail.outbox) == 0
