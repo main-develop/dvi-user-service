@@ -3,7 +3,7 @@
 </h1>
 
 <p align="center">
-<a href="https://github.com/main-develop/dvi-user-service/actions?query=workflow%3ATests+event%3Apush+branch%3Amain">
+<a href="https://github.com/main-develop/dvi-user-service/actions/workflows/tests.yml/badge.svg?event=push&branch=main">
     <img src="https://github.com/main-develop/dvi-user-service/actions/workflows/tests.yml/badge.svg?event=push&branch=main" alt="Tests">
 </a>
 <a href="https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/main-develop/ef41d8165e52e674ad2fca6e6ef06da9/raw/coverage.json">
