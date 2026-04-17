@@ -24,11 +24,6 @@ urlpatterns = [
         name="users_me_email",
     ),
     path(
-        "me/email/confirm/",
-        CustomUserViewSet.as_view({"post": "change_email_confirm"}),
-        name="users_me_email_confirm",
-    ),
-    path(
         "password/reset/",
         CustomUserViewSet.as_view({"post": "reset_password"}),
         name="users_password_reset",

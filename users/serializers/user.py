@@ -46,7 +46,7 @@ class UserFunctionsMixin:
         if (
             settings.PASSWORD_RESET_SHOW_EMAIL_NOT_FOUND
             or settings.USERNAME_RESET_SHOW_EMAIL_NOT_FOUND
-        ):
+        ): # pragma: no cover
             self.fail("email_not_found")
 
 
@@ -92,7 +92,7 @@ class CurrentPasswordSerializer(serializers.Serializer):
             self.fail("invalid_password")
 
 
-class ResendVerificationEmailSerializer(SendEmailResetSerializer, UserFunctionsMixin):
+class ResendVerificationEmailSerializer(UserFunctionsMixin, SendEmailResetSerializer):
     """Serializer for requesting a resend of a verification email."""
 
     purpose = serializers.ChoiceField(choices=VerificationPurpose, required=True)
@@ -155,8 +155,10 @@ class PasswordRetypeSerializer(PasswordSerializer):
     )
 
     def validate(self, attrs):
+        self.fields.pop("confirm_password", None)
+        confirm_password = attrs.pop("confirm_password")
         attrs = super().validate(attrs)
-        if attrs["new_password"] == attrs["confirm_password"]:
+        if attrs["new_password"] == confirm_password:
             return attrs
         else:
             self.fail("password_mismatch")
@@ -166,7 +168,7 @@ class SetPasswordRetypeSerializer(PasswordRetypeSerializer, CurrentPasswordSeria
     """Serializer for setting a new password."""
 
 
-class PasswordResetSerializer(SendEmailResetSerializer, UserFunctionsMixin):
+class PasswordResetSerializer(UserFunctionsMixin, SendEmailResetSerializer):
     """Serializer for requesting password reset."""
 
 

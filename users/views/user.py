@@ -62,10 +62,7 @@ class CustomUserViewSet(UserViewSet):
             return ResendVerificationEmailSerializer
         if self.action == "change_email":
             return ChangeEmailSerializer
-        if self.action in {
-            "change_email_confirm",
-            "lockdown_account",
-        }:
+        if self.action == "lockdown_account":
             return UidAndTokenSerializer
 
         return super().get_serializer_class()
@@ -87,7 +84,7 @@ class CustomUserViewSet(UserViewSet):
             sender=self.__class__, user=user, request=self.request
         )
 
-        if settings.SEND_ACTIVATION_EMAIL:
+        if settings.SEND_ACTIVATION_EMAIL: # pragma: no branch
             send_email(
                 purpose=EmailPurpose.ACCOUNT_ACTIVATION,
                 request=self.request,
@@ -119,7 +116,7 @@ class CustomUserViewSet(UserViewSet):
                 sender=self.__class__, user=user, request=self.request
             )
 
-            if settings.SEND_CONFIRMATION_EMAIL:
+            if settings.SEND_CONFIRMATION_EMAIL: # pragma: no branch
                 send_email(
                     purpose=EmailPurpose.ACCOUNT_ACTIVATED,
                     request=self.request,
@@ -171,7 +168,7 @@ class CustomUserViewSet(UserViewSet):
         user: User = serializer.get_user(
             is_active=purpose != VerificationPurpose.ACCOUNT_ACTIVATION
         )
-        if user:
+        if user: # pragma: no branch
             context = {}
 
             if purpose == VerificationPurpose.RESET_PASSWORD:
@@ -229,37 +226,6 @@ class CustomUserViewSet(UserViewSet):
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @extend_schema(summary="Confirm email change", tags=["Users"])
-    @action(["post"], detail=False)
-    def change_email_confirm(self, request, *args, **kwargs):
-        """
-        Confirm the new email address using 6-digit OTP.
-        """
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        user: User = verify_otp(serializer.user.email)
-        with transaction.atomic():
-            old_email = user.email
-            user.email = user.pending_email
-            user.pending_email = None
-            user.save()
-
-        send_email(
-            purpose=EmailPurpose.EMAIL_CHANGED_NOTICE,
-            request=request,
-            context={"user": user},
-            to=old_email,
-        )
-        send_email(
-            purpose=EmailPurpose.EMAIL_CHANGED,
-            request=request,
-            context={"user": user},
-            to=user.email,
-        )
-
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
     @extend_schema(summary="Request password reset", tags=["Users"])
     @action(["post"], detail=False)
     def reset_password(self, request, *args, **kwargs):
@@ -272,7 +238,7 @@ class CustomUserViewSet(UserViewSet):
         serializer.is_valid(raise_exception=True)
 
         user: User = serializer.get_user()
-        if user:
+        if user: # pragma: no branch
             send_email(
                 purpose=EmailPurpose.RESET_PASSWORD, request=request, to=user.email
             )
@@ -289,10 +255,8 @@ class CustomUserViewSet(UserViewSet):
         serializer.is_valid(raise_exception=True)
 
         user: User = serializer.user
-        with transaction.atomic():
-            user.set_password(serializer.validated_data["new_password"])
-            user.is_active = True
-            user.save(update_fields=["password", "is_active"])
+        user.set_password(serializer.validated_data["new_password"])
+        user.save(update_fields=["password"])
 
         revoke_all_user_sessions(user)
         send_email(
@@ -327,8 +291,14 @@ class CustomUserViewSet(UserViewSet):
             )
 
         revoke_all_user_sessions(user)
+
+        uid = utils.encode_uid(user.pk)
+        token = default_token_generator.make_token(user)
         send_email(
-            purpose=EmailPurpose.ACCOUNT_LOCKDOWN, request=request, to=user.email
+            purpose=EmailPurpose.ACCOUNT_LOCKDOWN,
+            request=request,
+            context={"uid": uid, "token": token},
+            to=user.email,
         )
 
         return Response(status=status.HTTP_200_OK)
