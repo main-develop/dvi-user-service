@@ -4,9 +4,9 @@ from unittest.mock import MagicMock, patch
 import pytest
 from django.contrib.sessions.backends.db import SessionStore
 from django.contrib.sessions.models import Session
+from factories import UserFactory
 
 from users.utils import revoke_all_user_sessions
-from factories import UserFactory
 
 
 @pytest.mark.django_db
