@@ -50,9 +50,23 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
+      rabbitmq:
+        image: rabbitmq:3.13-management
+        env:
+          RABBITMQ_DEFAULT_USER: rabbit
+          RABBITMQ_DEFAULT_PASS: rabbit-insecure-for-tests-only-1234567890
+        ports:
+          - 5672:5672
+        options: >-
+          --health-cmd "rabbitmq-diagnostics status"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     env:
       DATABASE_URL: postgres://postgres:postgres@localhost:5432/test_db
       REDIS_URL: redis://localhost:6379/0
+      CELERY_BROKER_URL: amqp://rabbit:rabbit-insecure-for-tests-only-1234567890@rabbitmq:5672//
       DJANGO_SETTINGS_MODULE: dvi_user_service.settings.test
       DJANGO_ENVIRONMENT: test
       SECRET_KEY: django-insecure-for-tests-only-1234567890
