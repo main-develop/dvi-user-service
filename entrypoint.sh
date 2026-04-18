@@ -14,7 +14,7 @@ fi
 case "$1" in
     celery)
         shift  # Remove "celery" from arguments
-        exec celery -A dvi_user_service.celery worker --loglevel=info --pool=prefork "$@"
+        exec celery -A dvi_user_service.celery worker --loglevel=info --pool=prefork -Q celery,emails "$@"
         ;;
     *)
         echo "Starting Gunicorn..."
