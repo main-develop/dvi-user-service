@@ -25,7 +25,7 @@ def revoke_all_user_sessions(user: User):
             continue
 
 
-def generate_uid_and_token(user: User) -> dict[str, str] | {}:
+def generate_uid_and_token(user: User) -> dict[str, str]:
     """Generate `uid` and `token` based on the given user for the email context."""
     context = {}
 
