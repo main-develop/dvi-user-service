@@ -5,7 +5,7 @@ Are You Trying to Change the Email on Your DVI Account?
 {% block text_body %}
 Dear user,
 
-We received a request to change the primary email address on your DVI account to {{ user.pending_email }}.
+We received a request to change the primary email address on your DVI account to {{ pending_email }}.
 
 If you made this request, you can safely ignore this email. The change will complete once the new address is verified.
 
@@ -48,7 +48,7 @@ Sincerely, The DVI Team
                 <p style="margin: 15px 0 10px; font-size: 15px">
                   We received a request to change the primary email address on
                   your <strong>DVI</strong> account to
-                  <strong>{{ user.pending_email }}</strong>.
+                  <strong>{{ pending_email }}</strong>.
                 </p>
 
                 <p style="margin-top: 0; font-size: 15px">
