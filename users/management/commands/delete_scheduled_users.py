@@ -3,7 +3,8 @@ from django.core.management.base import BaseCommand
 from django.db import transaction
 from django.utils import timezone
 
-from users.emails import EmailPurpose, send_email
+from users.emails import EmailPurpose
+from users.tasks import send_email_task
 from users.utils import revoke_all_user_sessions
 
 User = get_user_model()
@@ -104,8 +105,8 @@ class Command(BaseCommand):
                     self.style.SUCCESS,
                 )
 
-                send_email(
-                    purpose=EmailPurpose.ACCOUNT_DELETED,
+                send_email_task.delay(
+                    purpose=EmailPurpose.ACCOUNT_DELETED.name,
                     context={"deletion_datetime": timezone.now()},
                     to=email,
                 )

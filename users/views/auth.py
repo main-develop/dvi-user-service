@@ -3,9 +3,10 @@ from drf_spectacular.utils import extend_schema
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 
-from users.emails import EmailPurpose, send_email
+from users.emails import EmailPurpose
 from users.models import User
 from users.serializers.auth import LoginSerializer, LogoutSerializer
+from users.tasks import send_email_task
 
 
 class LoginView(generics.GenericAPIView):
@@ -61,11 +62,10 @@ class LoginView(generics.GenericAPIView):
             )
         if user.deletion_scheduled_at:
             user.deletion_scheduled_at = None
-            user.save()
+            user.save(update_fields=["deletion_scheduled_at"])
 
-            send_email(
-                purpose=EmailPurpose.ACCOUNT_DELETION_CANCELED,
-                request=request,
+            send_email_task.delay(
+                purpose=EmailPurpose.ACCOUNT_DELETION_CANCELED.name,
                 to=user.email,
             )
 
