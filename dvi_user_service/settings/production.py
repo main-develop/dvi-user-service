@@ -29,3 +29,4 @@ CACHES = {
         "KEY_PREFIX": "otp",
     }
 }
+CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND")

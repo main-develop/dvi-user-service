@@ -18,13 +18,13 @@ def test_send_email_calls_generate_otp_for_otp_based_purposes(user, purpose):
     with patch("users.emails.generate_and_set_otp") as mock_otp:
         mock_otp.return_value = "ABC123"
 
-        send_email(purpose, to=user.email)
+        send_email(purpose.name, to=user.email)
 
         mock_otp.assert_called_once_with(email=user.email)
 
 
 def test_send_email_no_user():
     send_email(
-        EmailPurpose.EMAIL_CHANGED_NOTICE, context={"uid": "", "token": ""}, to=""
+        EmailPurpose.EMAIL_CHANGED_NOTICE.name, context={"uid": "", "token": ""}, to=""
     )
     assert len(mail.outbox) == 0

@@ -41,13 +41,13 @@ def test_delete_scheduled_users_sends_email(scheduled_at_past):
     due = UserFactory(deletion_scheduled_at=scheduled_at_past)
 
     with patch(
-        "users.management.commands.delete_scheduled_users.send_email"
+        "users.management.commands.delete_scheduled_users.send_email_task"
     ) as mock_send:
         call_command("delete_scheduled_users", dry_run=False)
 
-        mock_send.assert_called_once()
+        mock_send.delay.assert_called_once()
 
-        assert mock_send.call_args.kwargs["to"] == due.email
+        assert mock_send.delay.call_args.kwargs["to"] == due.email
 
 
 @pytest.mark.django_db

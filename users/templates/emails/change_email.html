@@ -5,7 +5,7 @@ Confirm Your New Email Address for DVI
 {% block text_body%}
 Hi,
 
-We received a request to change the email address on your DVI account to {{ user.pending_email }}.
+We received a request to change the email address on your DVI account to {{ pending_email }}.
 
 Please use the following code to confirm this change: {{ otp }}.
 
@@ -47,7 +47,7 @@ Sincerely, The DVI Team
                 <p style="margin: 15px 0 10px; font-size: 15px">
                   We received a request to change the email address on your
                   <strong>DVI</strong> account to
-                  <strong>{{ user.pending_email }}</strong>.
+                  <strong>{{ pending_email }}</strong>.
                 </p>
 
                 <p style="font-size: 15px">Please use the code below to confirm this change:</p>

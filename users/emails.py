@@ -1,52 +1,13 @@
 from enum import Enum
+from typing import Literal
 
-from django.contrib.auth.tokens import default_token_generator
-from django.http import HttpRequest
-from djoser import utils
 from djoser.email import (
     BaseDjoserEmail,
 )
 
-from users.models import User
 from users.services.otp import generate_and_set_otp
 
 DATETIME_FORMAT = "%B %d, %Y at %H:%M UTC"
-
-
-class AccountSecurityLockdownMixin:
-    """
-    Add a secure account lockdown URL to the email context.
-
-    This mixin is intended for use in emails related to sensitive account actions.
-    Generates a URL pointing to a lockdown endpoint that requires both the
-    `uid` and `token` to proceed.
-    """
-
-    def get_context_data(self):
-        context = super().get_context_data()
-        context["account_security_lockdown_url"] = (
-            f"account-security/lockdown/{context['uid']}/{context['token']}"
-        )
-
-        return context
-
-
-class UidAndTokenMixin:
-    """
-    Add `uid` and `token` to email context data.
-
-    Assumes user is available in the context from the base class.
-    """
-
-    def get_context_data(self):
-        context = super().get_context_data()
-        user: User = context.get("user")
-
-        if user:
-            context["uid"] = utils.encode_uid(user.pk)
-            context["token"] = default_token_generator.make_token(user)
-
-        return context
 
 
 class AccountActivationEmail(BaseDjoserEmail):
@@ -61,9 +22,7 @@ class AccountActivatedEmail(BaseDjoserEmail):
     template_name = "emails/account_activated.html"
 
 
-class AccountDeletionEmail(
-    AccountSecurityLockdownMixin, UidAndTokenMixin, BaseDjoserEmail
-):
+class AccountDeletionEmail(BaseDjoserEmail):
     """
     Sent after user's account has been scheduled for deletion.
 
@@ -79,7 +38,7 @@ class AccountDeletionEmail(
             f"cancel-deletion/{context['uid']}/{context['token']}"
         )
 
-        deletion_scheduled_at = context["user"].deletion_scheduled_at
+        deletion_scheduled_at = context["deletion_scheduled_at"]
         context["account_deletion_datetime"] = deletion_scheduled_at.strftime(
             DATETIME_FORMAT
         )
@@ -119,8 +78,8 @@ class AccountLockdownEmail(BaseDjoserEmail):
 
     def get_context_data(self):
         context = super().get_context_data()
-        context["password_reset_url"] = (
-            f"password/reset/{context['uid']}/{context['token']}"
+        context["reset_password_url"] = (
+            f"reset-password/{context['uid']}/{context['token']}"
         )
 
         return context
@@ -134,9 +93,7 @@ class ChangeEmailEmail(BaseDjoserEmail):
     template_name = "emails/change_email.html"
 
 
-class ChangeEmailNoticeEmail(
-    AccountSecurityLockdownMixin, UidAndTokenMixin, BaseDjoserEmail
-):
+class ChangeEmailNoticeEmail(BaseDjoserEmail):
     """
     Sent to the current email address when someone requests to
     change the account's email.
@@ -158,9 +115,7 @@ class EmailChangedEmail(BaseDjoserEmail):
     template_name = "emails/email_changed.html"
 
 
-class EmailChangedNoticeEmail(
-    AccountSecurityLockdownMixin, UidAndTokenMixin, BaseDjoserEmail
-):
+class EmailChangedNoticeEmail(BaseDjoserEmail):
     """
     Sent to the old email address after the account's email was changed.
 
@@ -169,6 +124,14 @@ class EmailChangedNoticeEmail(
     """
 
     template_name = "emails/email_changed_notice.html"
+
+    def get_context_data(self):
+        context = super().get_context_data()
+        context["account_security_lockdown_url"] = (
+            f"account-security/lockdown/{context['uid']}/{context['token']}"
+        )
+
+        return context
 
 
 class ResetPasswordEmail(BaseDjoserEmail):
@@ -179,9 +142,7 @@ class ResetPasswordEmail(BaseDjoserEmail):
     template_name = "emails/reset_password.html"
 
 
-class PasswordChangedEmail(
-    AccountSecurityLockdownMixin, UidAndTokenMixin, BaseDjoserEmail
-):
+class PasswordChangedEmail(BaseDjoserEmail):
     """Sent when the user's password has been changed."""
 
     template_name = "emails/password_changed.html"
@@ -202,11 +163,11 @@ class EmailPurpose(Enum):
     PASSWORD_CHANGED = PasswordChangedEmail
 
 
+EmailPurposeLiteral = Literal[tuple(EmailPurpose._member_names_)]
+
+
 def send_email(
-    purpose: EmailPurpose,
-    to: str,
-    request: HttpRequest = None,
-    context: dict | None = None,
+    purpose: EmailPurposeLiteral, to: str, context: dict | None = None
 ) -> None:
     """
     Send an email for the specified purpose.
@@ -219,12 +180,12 @@ def send_email(
         context = {}
 
     include_otp = purpose in {
-        EmailPurpose.ACCOUNT_ACTIVATION,
-        EmailPurpose.RESET_PASSWORD,
-        EmailPurpose.CHANGE_EMAIL,
+        EmailPurpose.ACCOUNT_ACTIVATION.name,
+        EmailPurpose.RESET_PASSWORD.name,
+        EmailPurpose.CHANGE_EMAIL.name,
     }
     if include_otp:
         context["otp"] = generate_and_set_otp(email=to)
 
-    email = purpose.value
-    email(request=request, context=context).send(to=[to])
+    email_class = EmailPurpose[purpose].value
+    email_class(request=None, context=context).send(to=[to])

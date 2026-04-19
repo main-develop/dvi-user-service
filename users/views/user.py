@@ -10,7 +10,7 @@ from rest_framework import permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from users.emails import EmailPurpose, send_email
+from users.emails import EmailPurpose
 from users.models import User
 from users.serializers.user import (
     ChangeEmailSerializer,
@@ -19,7 +19,8 @@ from users.serializers.user import (
     VerifyOtpSerializer,
 )
 from users.services.otp import verify_otp
-from users.utils import revoke_all_user_sessions
+from users.tasks import send_email_task
+from users.utils import generate_uid_and_token, revoke_all_user_sessions
 
 
 @extend_schema_view(
@@ -84,10 +85,9 @@ class CustomUserViewSet(UserViewSet):
             sender=self.__class__, user=user, request=self.request
         )
 
-        if settings.SEND_ACTIVATION_EMAIL: # pragma: no branch
-            send_email(
-                purpose=EmailPurpose.ACCOUNT_ACTIVATION,
-                request=self.request,
+        if settings.SEND_ACTIVATION_EMAIL:  # pragma: no branch
+            send_email_task.delay(
+                purpose=EmailPurpose.ACCOUNT_ACTIVATION.name,
                 to=user.email,
             )
 
@@ -110,35 +110,33 @@ class CustomUserViewSet(UserViewSet):
 
         if not user.is_active:
             user.is_active = True
-            user.save()
+            user.save(update_fields=["is_active"])
 
             signals.user_activated.send(
                 sender=self.__class__, user=user, request=self.request
             )
 
-            if settings.SEND_CONFIRMATION_EMAIL: # pragma: no branch
-                send_email(
-                    purpose=EmailPurpose.ACCOUNT_ACTIVATED,
-                    request=self.request,
+            if settings.SEND_CONFIRMATION_EMAIL:  # pragma: no branch
+                send_email_task.delay(
+                    purpose=EmailPurpose.ACCOUNT_ACTIVATED.name,
                     to=user.email,
                 )
+
         if user.pending_email:
             with transaction.atomic():
                 old_email = user.email
                 user.email = user.pending_email
                 user.pending_email = None
-                user.save()
+                user.save(update_fields=["email", "pending_email"])
 
-            send_email(
-                purpose=EmailPurpose.EMAIL_CHANGED_NOTICE,
-                request=request,
-                context={"user": user},
+            send_email_task.delay(
+                purpose=EmailPurpose.EMAIL_CHANGED_NOTICE.name,
+                context=generate_uid_and_token(user),
                 to=old_email,
             )
-            send_email(
-                purpose=EmailPurpose.EMAIL_CHANGED,
-                request=request,
-                context={"user": user},
+            send_email_task.delay(
+                purpose=EmailPurpose.EMAIL_CHANGED.name,
+                context={"email": user.email},
                 to=user.email,
             )
 
@@ -168,27 +166,25 @@ class CustomUserViewSet(UserViewSet):
         user: User = serializer.get_user(
             is_active=purpose != VerificationPurpose.ACCOUNT_ACTIVATION
         )
-        if user: # pragma: no branch
+        if user:  # pragma: no branch
             context = {}
 
             if purpose == VerificationPurpose.RESET_PASSWORD:
-                email_purpose = EmailPurpose.RESET_PASSWORD
+                email_purpose = EmailPurpose.RESET_PASSWORD.name
             elif purpose == VerificationPurpose.CHANGE_EMAIL:
-                email_purpose = EmailPurpose.CHANGE_EMAIL_NOTICE
-                context = {"user": user}
+                email_purpose = EmailPurpose.CHANGE_EMAIL_NOTICE.name
+                context = {"pending_email": user.pending_email}
 
-                send_email(
-                    purpose=EmailPurpose.CHANGE_EMAIL,
-                    request=request,
+                send_email_task.delay(
+                    purpose=EmailPurpose.CHANGE_EMAIL.name,
                     context=context,
                     to=user.pending_email,
                 )
             else:
-                email_purpose = EmailPurpose.ACCOUNT_ACTIVATION
+                email_purpose = EmailPurpose.ACCOUNT_ACTIVATION.name
 
-            send_email(
+            send_email_task.delay(
                 purpose=email_purpose,
-                request=self.request,
                 context=context,
                 to=user.email,
             )
@@ -209,18 +205,16 @@ class CustomUserViewSet(UserViewSet):
 
         user: User = request.user
         user.pending_email = serializer.validated_data["new_email"]
-        user.save()
+        user.save(update_fields=["pending_email"])
 
-        send_email(
-            purpose=EmailPurpose.CHANGE_EMAIL_NOTICE,
-            request=request,
-            context={"user": user},
+        send_email_task.delay(
+            purpose=EmailPurpose.CHANGE_EMAIL_NOTICE.name,
+            context={"pending_email": user.pending_email},
             to=user.email,
         )
-        send_email(
-            purpose=EmailPurpose.CHANGE_EMAIL,
-            request=request,
-            context={"user": user},
+        send_email_task.delay(
+            purpose=EmailPurpose.CHANGE_EMAIL.name,
+            context={"pending_email": user.pending_email},
             to=user.pending_email,
         )
 
@@ -238,9 +232,9 @@ class CustomUserViewSet(UserViewSet):
         serializer.is_valid(raise_exception=True)
 
         user: User = serializer.get_user()
-        if user: # pragma: no branch
-            send_email(
-                purpose=EmailPurpose.RESET_PASSWORD, request=request, to=user.email
+        if user:  # pragma: no branch
+            send_email_task.delay(
+                purpose=EmailPurpose.RESET_PASSWORD.name, to=user.email
             )
 
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -259,10 +253,9 @@ class CustomUserViewSet(UserViewSet):
         user.save(update_fields=["password"])
 
         revoke_all_user_sessions(user)
-        send_email(
-            purpose=EmailPurpose.PASSWORD_CHANGED,
-            request=request,
-            context={"user": user},
+        send_email_task.delay(
+            purpose=EmailPurpose.PASSWORD_CHANGED.name,
+            context=generate_uid_and_token(user),
             to=user.email,
         )
 
@@ -292,12 +285,9 @@ class CustomUserViewSet(UserViewSet):
 
         revoke_all_user_sessions(user)
 
-        uid = utils.encode_uid(user.pk)
-        token = default_token_generator.make_token(user)
-        send_email(
-            purpose=EmailPurpose.ACCOUNT_LOCKDOWN,
-            request=request,
-            context={"uid": uid, "token": token},
+        send_email_task.delay(
+            purpose=EmailPurpose.ACCOUNT_LOCKDOWN.name,
+            context=generate_uid_and_token(user),
             to=user.email,
         )
 
@@ -323,10 +313,12 @@ class CustomUserViewSet(UserViewSet):
 
         revoke_all_user_sessions(user)
 
-        send_email(
-            purpose=EmailPurpose.ACCOUNT_DELETION,
-            request=request,
-            context={"user": user},
+        send_email_task.delay(
+            purpose=EmailPurpose.ACCOUNT_DELETION.name,
+            context={
+                **generate_uid_and_token(user),
+                "deletion_scheduled_at": user.deletion_scheduled_at,
+            },
             to=user.email,
         )
 
