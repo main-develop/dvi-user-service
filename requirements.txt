@@ -1,3 +1,4 @@
+celery==5.6.3
 Django==6.0
 django-cors-headers==4.9.0
 django_environ==0.12.0

@@ -1,7 +1,9 @@
 import logging
 
+from django.contrib.auth.tokens import default_token_generator
 from django.contrib.sessions.models import Session
 from django.utils import timezone
+from djoser import utils
 
 from users.models import User
 
@@ -21,3 +23,14 @@ def revoke_all_user_sessions(user: User):
                 user.pk,
             )
             continue
+
+
+def generate_uid_and_token(user: User) -> dict[str, str]:
+    """Generate `uid` and `token` based on the given user for the email context."""
+    context = {}
+
+    if user: # pragma: no cover
+        context["uid"] = utils.encode_uid(user.pk)
+        context["token"] = default_token_generator.make_token(user)
+
+    return context

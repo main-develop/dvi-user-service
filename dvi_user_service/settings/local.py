@@ -18,3 +18,5 @@ CORS_ALLOWED_ORIGINS = env.list(
     ],
 )
 CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS[:]
+
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
