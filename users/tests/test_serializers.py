@@ -7,6 +7,8 @@ from users.serializers.user import (
     UserCreatePasswordRetypeSerializer,
 )
 
+from factories import UserFactory
+
 USER_CREATE_DATA = {
     "username": "test_user",
     "email": "test@example.com",
@@ -103,6 +105,23 @@ def test_change_email_serializer_invalid_email(user):
 
     serializer = ChangeEmailSerializer(
         data={"current_password": "testpassword123", "new_email": user.email},
+        context={"request": request},
+    )
+
+    assert not serializer.is_valid()
+    assert serializer.errors["new_email"][0].code == "invalid"
+
+
+@pytest.mark.django_db
+def test_change_email_serializer_email_already_taken(user):
+    other_user = UserFactory()
+
+    factory = APIRequestFactory()
+    request = factory.post("/")
+    request.user = user
+
+    serializer = ChangeEmailSerializer(
+        data={"current_password": "testpassword123", "new_email": other_user.email},
         context={"request": request},
     )
 

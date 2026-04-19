@@ -128,6 +128,11 @@ class ChangeEmailSerializer(CurrentPasswordSerializer):
                     )
                 }
             )
+        if User.objects.filter(email=attrs["new_email"]).exclude(pk=user.pk).exists():
+            raise serializers.ValidationError(
+                {"new_email": "This email address is already taken"}
+            )
+
         return attrs
 
 
