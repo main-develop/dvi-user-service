@@ -12,6 +12,7 @@ Faker==40.13.0
 gunicorn==23.0.0
 hiredis==3.3.1
 psycopg[binary]==3.2.12
+pwned-passwords-django==5.2.0
 pytest==9.0.3
 pytest-cov==7.1.0
 pytest-django==4.12.0
