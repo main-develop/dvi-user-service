@@ -1,14 +1,13 @@
-from zxcvbn import zxcvbn
-
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
+from zxcvbn import zxcvbn
 
 
 class ZxcvbnValidator:
     def validate(self, password, user=None):
         result = zxcvbn(password=password)
         if result["score"] < 2:
-            raise ValidationError("Password is too weak")
+            raise ValidationError("Password is too weak", "password_too_weak")
 
 
 class MaximumLengthValidator:

@@ -1,6 +1,6 @@
 import pytest
 from factories import UserFactory
-from rest_framework.test import APIClient
+from rest_framework.test import APIClient, APIRequestFactory
 
 
 @pytest.fixture
@@ -11,6 +11,13 @@ def api_client():
 @pytest.fixture
 def user(db):
     return UserFactory()
+
+
+@pytest.fixture
+def user_request(user):
+    request = APIRequestFactory().post("/")
+    request.user = user
+    return request
 
 
 @pytest.fixture

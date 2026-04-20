@@ -1,22 +1,21 @@
 import pytest
 from django.urls import reverse
 from django.utils import timezone
+from factories import TestData
 from rest_framework import status
 
 
-@pytest.mark.parametrize("condition", [True, False])
 @pytest.mark.django_db
-def test_login_success(api_client, user, condition):
-    if condition:
-        user.deletion_scheduled_at = timezone.now() + timezone.timedelta(hours=1)
-        user.save()
+def test_login_clears_scheduled_deletion(api_client, user):
+    user.deletion_scheduled_at = timezone.now() + timezone.timedelta(hours=1)
+    user.save()
 
     data = {
         "username_or_email": user.email,
-        "password": "testpassword123",
-        "remember_me": condition,
+        "password": TestData.PASSWORD,
+        "remember_me": False,
     }
-    response = api_client.post(path=reverse("auth_login"), data=data, format="json")
+    response = api_client.post(reverse("auth_login"), data=data, format="json")
 
     assert response.status_code == status.HTTP_200_OK
     user.refresh_from_db()
@@ -24,10 +23,23 @@ def test_login_success(api_client, user, condition):
 
 
 @pytest.mark.django_db
+@pytest.mark.parametrize("remember_me", [True, False])
+def test_login_success(api_client, user, remember_me):
+    data = {
+        "username_or_email": user.email,
+        "password": TestData.PASSWORD,
+        "remember_me": remember_me,
+    }
+    response = api_client.post(reverse("auth_login"), data=data, format="json")
+
+    assert response.status_code == status.HTTP_200_OK
+
+
+@pytest.mark.django_db
 def test_login_user_does_not_exist(api_client, user):
     data = {
         "username_or_email": "non-existent@example.com",
-        "password": "testpassword123",
+        "password": TestData.PASSWORD,
         "remember_me": False,
     }
     response = api_client.post(path=reverse("auth_login"), data=data, format="json")
@@ -42,7 +54,7 @@ def test_login_user_has_unusable_password(api_client, user):
 
     data = {
         "username_or_email": user.email,
-        "password": "testpassword123",
+        "password": TestData.PASSWORD,
         "remember_me": False,
     }
     response = api_client.post(path=reverse("auth_login"), data=data, format="json")
