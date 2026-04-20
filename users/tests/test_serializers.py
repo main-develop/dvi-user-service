@@ -1,20 +1,11 @@
 import pytest
-from rest_framework.test import APIRequestFactory
+from factories import USER_CREATE_DATA, TestData, UserFactory
 
 from users.serializers.user import (
     ChangeEmailSerializer,
     SetPasswordRetypeSerializer,
     UserCreatePasswordRetypeSerializer,
 )
-
-from factories import UserFactory
-
-USER_CREATE_DATA = {
-    "username": "test_user",
-    "email": "test@example.com",
-    "password": "testpassword123",
-    "confirm_password": "testpassword123",
-}
 
 
 @pytest.mark.django_db
@@ -36,76 +27,63 @@ def test_user_create_password_retype_serializer_mismatch():
 
 
 @pytest.mark.django_db
-def test_set_password_retype_serializer_valid(user):
-    factory = APIRequestFactory()
-    request = factory.post("/")
-    request.user = user
-
+def test_set_password_retype_serializer_valid(user_request):
     data = {
-        "new_password": "testpassword123",
-        "confirm_password": "testpassword123",
-        "current_password": "testpassword123",
+        "new_password": TestData.PASSWORD,
+        "confirm_password": TestData.PASSWORD,
+        "current_password": TestData.PASSWORD,
     }
 
-    serializer = SetPasswordRetypeSerializer(data=data, context={"request": request})
+    serializer = SetPasswordRetypeSerializer(
+        data=data, context={"request": user_request}
+    )
 
     assert serializer.is_valid()
     assert "confirm_password" not in serializer.validated_data
 
 
 @pytest.mark.django_db
-def test_set_password_retype_serializer_mismatch(user):
-    factory = APIRequestFactory()
-    request = factory.post("/")
-    request.user = user
-
+def test_set_password_retype_serializer_mismatch(user_request):
     data = {
-        "new_password": "testpassword123",
+        "new_password": TestData.PASSWORD,
         "confirm_password": "invalid",
-        "current_password": "testpassword123",
+        "current_password": TestData.PASSWORD,
     }
 
-    serializer = SetPasswordRetypeSerializer(data=data, context={"request": request})
+    serializer = SetPasswordRetypeSerializer(
+        data=data, context={"request": user_request}
+    )
 
     assert not serializer.is_valid()
     assert serializer.errors["non_field_errors"][0].code == "password_mismatch"
 
 
 @pytest.mark.django_db
-def test_change_email_serializer_valid(user):
-    factory = APIRequestFactory()
-    request = factory.post("/")
-    request.user = user
-
-    data = {"current_password": "testpassword123", "new_email": "new_test@example.com"}
-    serializer = ChangeEmailSerializer(data=data, context={"request": request})
+def test_change_email_serializer_valid(user_request):
+    data = {"current_password": TestData.PASSWORD, "new_email": TestData.NEW_EMAIL}
+    serializer = ChangeEmailSerializer(data=data, context={"request": user_request})
 
     assert serializer.is_valid()
-    assert serializer.validated_data["new_email"] == "new_test@example.com"
+    assert serializer.validated_data["new_email"] == TestData.NEW_EMAIL
 
 
 @pytest.mark.django_db
-def test_change_email_serializer_invalid_password(user):
-    factory = APIRequestFactory()
-    request = factory.post("/")
-    request.user = user
-
-    data = {"current_password": "invalid", "new_email": "new_test@example.com"}
-    serializer = ChangeEmailSerializer(data=data, context={"request": request})
+def test_change_email_serializer_invalid_password(user_request):
+    data = {"current_password": "invalid", "new_email": TestData.NEW_EMAIL}
+    serializer = ChangeEmailSerializer(data=data, context={"request": user_request})
 
     assert not serializer.is_valid()
     assert serializer.errors["current_password"][0].code == "invalid_password"
 
 
 @pytest.mark.django_db
-def test_change_email_serializer_invalid_email(user):
-    factory = APIRequestFactory()
-    request = factory.post("/")
-    request.user = user
-
+def test_change_email_serializer_invalid_email(user_request):
     serializer = ChangeEmailSerializer(
-        data={"current_password": "testpassword123", "new_email": user.email},
-        context={"request": request},
+        data={
+            "current_password": TestData.PASSWORD,
+            "new_email": user_request.user.email,
+        },
+        context={"request": user_request},
     )
 
     assert not serializer.is_valid()
@@ -113,16 +91,12 @@ def test_change_email_serializer_invalid_email(user):
 
 
 @pytest.mark.django_db
-def test_change_email_serializer_email_already_taken(user):
+def test_change_email_serializer_email_already_taken(user_request):
     other_user = UserFactory()
 
-    factory = APIRequestFactory()
-    request = factory.post("/")
-    request.user = user
-
     serializer = ChangeEmailSerializer(
-        data={"current_password": "testpassword123", "new_email": other_user.email},
-        context={"request": request},
+        data={"current_password": TestData.PASSWORD, "new_email": other_user.email},
+        context={"request": user_request},
     )
 
     assert not serializer.is_valid()

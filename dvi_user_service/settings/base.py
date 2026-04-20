@@ -63,6 +63,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "pwned_passwords_django.middleware.pwned_passwords_middleware",
 ]
 TEMPLATES = [
     {
@@ -100,6 +101,21 @@ DATABASES = {
 }
 AUTH_USER_MODEL = "users.User"
 
+# Password hashers
+PASSWORD_HASHERS = [
+    "django.contrib.auth.hashers.Argon2PasswordHasher",
+    "django.contrib.auth.hashers.PBKDF2PasswordHasher",
+    "django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher",
+    "django.contrib.auth.hashers.BCryptSHA256PasswordHasher",
+    "django.contrib.auth.hashers.ScryptPasswordHasher",
+]
+
+ARGON2_TIME_COST = 2
+ARGON2_MEMORY_COST = 47104
+ARGON2_PARALLELISM = 1
+ARGON2_HASH_LENGTH = 32
+ARGON2_SALT_SIZE = 16
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
@@ -117,10 +133,19 @@ AUTH_PASSWORD_VALIDATORS = [
         "NAME": "users.validators.MaximumLengthValidator",
     },
     {
+        "NAME": "users.validators.ZxcvbnValidator",
+    },
+    {
         "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
     },
     {
         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
+    },
+    {
+        "NAME": "pwned_passwords_django.validators.PwnedPasswordsValidator",
+        "OPTIONS": {
+            "error_message": "This password has previously appeared in a data breach"
+        },
     },
 ]
 
